@@ -1,8 +1,8 @@
 -- ============================================================
 -- 拟真种子数据 v2（覆盖 35 天 + 双十一高峰，真实姓名/分散时间戳）
--- 数据库 artex，schema campus_express。在 01_schema + 02_seed 之后执行:
---   psql -U artex -d artex -c 'SET search_path TO campus_express' \i 03_seed_realistic.sql
--- 或: PGOPTIONS="-c search_path=campus_express" psql -U artex -d artex -f 本文件
+-- schema campus_express。在 01_schema + 02_seed 之后执行（数据库名/用户按你自己的环境替换）:
+--   psql -U <用户名> -d <库名> -c 'SET search_path TO campus_express' \i 03_seed_realistic.sql
+-- 或: PGOPTIONS="-c search_path=campus_express" psql -U <用户名> -d <库名> -f 本文件
 -- 幂等：清空业务表后重建；演示账号 admin/staff01/20230101 密码 123456 不变
 -- ============================================================
 SET search_path TO campus_express;

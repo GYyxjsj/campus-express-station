@@ -2,7 +2,7 @@
 -- 校园快递驿站 · 社区与增值服务迁移（幂等，可重复执行）
 -- 新增：好友 / 邀请返利 / 红包卡券+兑换码 / 地址簿 / 收货偏好 / 电话簿
 --       自寄订单 / 超时保险 / 客服工单 / 意见反馈 / 广告位 / AI 与关于我们配置
--- 执行: PGPASSWORD=... psql -U artex -d artex -v ON_ERROR_STOP=1 -f 05_community.sql
+-- 执行: PGPASSWORD=... psql -U <用户名> -d <库名> -v ON_ERROR_STOP=1 -f 05_community.sql
 -- ============================================================
 
 BEGIN;

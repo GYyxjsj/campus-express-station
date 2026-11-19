@@ -82,7 +82,7 @@ psql -U campus_express -d campus_express -f sql/05_community.sql
 # 可选：03_seed_realistic.sql 灌入真实感演示数据
 ```
 
-本机实际环境（已就绪）：PostgreSQL 18（`D:\Program_Files\PostgreSQL\18`），库 `artex`、schema `campus_express`，连接用户 `artex`；SQL 脚本内已固定 schema，按序执行 01 → 02 →（可选 03）→ 04 → 05 即可。### 2. 构建并部署后端（外置 Tomcat 9）
+SQL 脚本内已固定 `campus_express` schema，按序执行 01 → 02 →（可选 03）→ 04 → 05 即可。数据库名与账号请使用你自己的 PostgreSQL 环境，脚本不绑定特定账号。### 2. 构建并部署后端（外置 Tomcat 9）
 
 ```bash
 cd backend && mvn clean package -DskipTests
@@ -92,7 +92,7 @@ cp target/campus-express.war $CATALINA_HOME/webapps/
 curl http://127.0.0.1:8080/campus-express/api/health   # {"code":0,...,"status":"UP"}
 ```
 
-本机实际路径：Maven `D:\Program_Files\apache-maven-3.9.16`，Tomcat `D:\Program_Files\apache-tomcat-9.0.124`（webapps 热部署验证通过）。
+将 `target/campus-express.war` 复制到你的 Tomcat `webapps/` 目录即可（示例中用 `$CATALINA_HOME` 指代你的 Tomcat 安装路径）。
 
 ### 3. 启动前端
 
@@ -147,7 +147,7 @@ npm run build      # 生产：dist/ 交给 Nginx，配置见部署指南 §5.3
 
 | 变量 | 默认 | 说明 |
 |---|---|---|
-| DB_URL / DB_USER / DB_PASSWORD | 本机 campus_express / postgres / postgres（本机实际：artex 库 + artex 用户） | 数据库连接 |
+| DB_URL / DB_USER / DB_PASSWORD | 未设置时回退到 `campus_express` / `postgres` / `postgres`（仅为占位，请按自己的环境设置） | 数据库连接 |
 | DB_POOL_MAX | 20 | Hikari 连接池上限 |
 | JWT_SECRET | 开发默认（生产必改） | HS256 密钥，≥32 字节 |
 | TASK_ENABLED | true | 定时任务开关，多实例仅一台开启 |
