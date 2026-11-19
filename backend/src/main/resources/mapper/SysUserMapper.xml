@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.express.mapper.SysUserMapper">
+
+    <sql id="cols">
+        id, username, real_name, phone, email, password, status, invite_code, invited_by, created_at, updated_at
+    </sql>
+
+    <select id="selectById" resultType="SysUser">
+        SELECT <include refid="cols"/> FROM sys_user WHERE id = #{id}
+    </select>
+
+    <select id="selectByUsername" resultType="SysUser">
+        SELECT <include refid="cols"/> FROM sys_user WHERE username = #{username}
+    </select>
+
+    <select id="selectByPhone" resultType="SysUser">
+        SELECT <include refid="cols"/> FROM sys_user WHERE phone = #{phone} AND status = 1 LIMIT 1
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sys_user (username, real_name, phone, email, password, status)
+        VALUES (#{username}, #{realName}, #{phone}, #{email}, #{password}, #{status})
+    </insert>
+
+    <update id="updatePassword">
+        UPDATE sys_user SET password = #{password}, updated_at = now() WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE sys_user SET status = #{status}, updated_at = now() WHERE id = #{id}
+    </update>
+
+    <update id="updateProfile">
+        UPDATE sys_user
+        SET real_name = #{realName}, phone = #{phone}, email = #{email}, updated_at = now()
+        WHERE id = #{id}
+    </update>
+
+    <select id="countAll" resultType="long">
+        SELECT count(*) FROM sys_user
+    </select>
+
+    <sql id="pageWhere">
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (u.username ILIKE '%' || #{keyword} || '%' OR u.real_name ILIKE '%' || #{keyword} || '%')
+            </if>
+            <if test="roleCode != null and roleCode != ''">
+                AND EXISTS (SELECT 1 FROM sys_user_role ur JOIN sys_role r ON r.id = ur.role_id
+                            WHERE ur.user_id = u.id AND r.role_code = #{roleCode})
+            </if>
+            <if test="status != null">
+                AND u.status = #{status}
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectPage" resultType="SysUser">
+        SELECT u.id, u.username, u.real_name, u.phone, u.email, u.status, u.created_at, u.updated_at
+        FROM sys_user u
+        <include refid="pageWhere"/>
+        ORDER BY ${sortCol} ${sortDir}, u.id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countPage" resultType="long">
+        SELECT count(*) FROM sys_user u
+        <include refid="pageWhere"/>
+    </select>
+
+    <select id="searchStudents" resultType="SysUser">
+        SELECT u.id, u.username, u.real_name, u.phone
+        FROM sys_user u
+        JOIN sys_user_role ur ON ur.user_id = u.id
+        JOIN sys_role r ON r.id = ur.role_id AND r.role_code = 'STUDENT'
+        WHERE u.status = 1
+          AND (u.username ILIKE '%' || #{keyword} || '%' OR u.real_name ILIKE '%' || #{keyword} || '%')
+        ORDER BY u.username
+        LIMIT 10
+    </select>
+
+    <select id="selectRoleCodes" resultType="string">
+        SELECT r.role_code FROM sys_role r
+        JOIN sys_user_role ur ON ur.role_id = r.id
+        WHERE ur.user_id = #{userId}
+    </select>
+
+    <select id="selectRoleNames" resultType="string">
+        SELECT r.role_name FROM sys_role r
+        JOIN sys_user_role ur ON ur.role_id = r.id
+        WHERE ur.user_id = #{userId}
+    </select>
+
+    <select id="selectPermCodes" resultType="string">
+        SELECT DISTINCT p.perm_code
+        FROM sys_permission p
+        JOIN sys_role_permission rp ON rp.perm_id = p.id
+        JOIN sys_user_role ur ON ur.role_id = rp.role_id
+        WHERE ur.user_id = #{userId}
+    </select>
+
+    <insert id="insertUserRole">
+        INSERT INTO sys_user_role (user_id, role_id)
+        SELECT #{userId}, id FROM sys_role WHERE role_code = #{roleCode}
+        ON CONFLICT DO NOTHING
+    </insert>
+
+    <delete id="deleteUserRoles">
+        DELETE FROM sys_user_role WHERE user_id = #{userId}
+    </delete>
+
+    <select id="selectAdminIds" resultType="long">
+        SELECT ur.user_id FROM sys_user_role ur
+        JOIN sys_role r ON r.id = ur.role_id AND r.role_code = 'ADMIN'
+        JOIN sys_user u ON u.id = ur.user_id AND u.status = 1
+    </select>
+
+    <select id="countByStatus" resultType="long">
+        SELECT count(*) FROM sys_user WHERE status = #{status}
+    </select>
+
+    <!-- 注销护栏：名下在库/滞留包裹 -->
+    <select id="countActiveParcels" resultType="long">
+        SELECT count(*) FROM parcel
+        WHERE owner_id = #{userId} AND status IN ('IN_STOCK','OVERDUE')
+    </select>
+
+    <!-- 注销护栏：进行中代取服务单（发布人或跑腿员） -->
+    <select id="countActiveProxyOrders" resultType="long">
+        SELECT count(*) FROM proxy_order
+        WHERE (requester_id = #{userId} OR runner_id = #{userId})
+          AND status IN ('OPEN','ACCEPTED','PICKED','DELIVERED')
+    </select>
+
+    <!-- 注销护栏：钱包余额（无账户返回 null） -->
+    <select id="selectWalletBalance" resultType="java.math.BigDecimal">
+        SELECT balance FROM wallet_account WHERE user_id = #{userId}
+    </select>
+
+    <!-- 注销联动：吊销名下生效中的身份条码 -->
+    <update id="revokeActiveIdentity">
+        UPDATE identity_code SET status = 'REVOKED', revoked_at = now()
+        WHERE user_id = #{userId} AND status = 'ACTIVE'
+    </update>
+
+    <!-- 邀请有礼 -->
+    <select id="selectByInviteCode" resultType="SysUser">
+        SELECT <include refid="cols"/> FROM sys_user
+        WHERE invite_code = #{code} AND status = 1 LIMIT 1
+    </select>
+
+    <update id="bindInviter">
+        UPDATE sys_user SET invited_by = #{inviterId}, updated_at = now()
+        WHERE id = #{id} AND invited_by IS NULL
+    </update>
+
+    <update id="updateInviteCode">
+        UPDATE sys_user SET invite_code = #{code}, updated_at = now()
+        WHERE id = #{id} AND invite_code IS NULL
+    </update>
+
+    <select id="selectStaffIds" resultType="long">
+        SELECT ur.user_id FROM sys_user_role ur
+        JOIN sys_role r ON r.id = ur.role_id AND r.role_code = 'STAFF'
+        JOIN sys_user u ON u.id = ur.user_id AND u.status = 1
+    </select>
+
+    <select id="selectInvitees" resultType="SysUser">
+        SELECT id, username, real_name, phone, status, created_at
+        FROM sys_user WHERE invited_by = #{inviterId}
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="countInvitees" resultType="long">
+        SELECT count(*) FROM sys_user WHERE invited_by = #{inviterId}
+    </select>
+</mapper>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.express.mapper.NoticeMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO notice (title, content, status, is_popup, priority, category, publisher_id)
+        VALUES (#{title}, #{content}, #{status}, COALESCE(#{isPopup}, 0),
+                COALESCE(#{priority}, 0), COALESCE(#{category}, 'NOTICE'), #{publisherId})
+    </insert>
+
+    <select id="selectById" resultType="Notice">
+        SELECT * FROM notice WHERE id = #{id}
+    </select>
+
+    <select id="selectPage" resultType="Notice">
+        SELECT * FROM notice
+        <where>
+            <if test="publishedOnly">AND status = 1</if>
+        </where>
+        ORDER BY priority DESC, created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countPage" resultType="long">
+        SELECT count(*) FROM notice
+        <where>
+            <if test="publishedOnly">AND status = 1</if>
+        </where>
+    </select>
+
+    <update id="update">
+        UPDATE notice
+        SET title = #{title}, content = #{content}, status = #{status},
+            is_popup = COALESCE(#{isPopup}, is_popup),
+            priority = COALESCE(#{priority}, priority),
+            category = COALESCE(#{category}, category),
+            updated_at = now()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 弹窗候选：已发布的弹窗公告一律返回；是否「下次不再弹出」由前端本地勾选记录决定，
+         notice_read 仅作已读留痕，不再用于过滤，保证未勾选时每次登录都会继续弹出 -->
+    <sql id="popupWhere">
+        WHERE n.status = 1 AND n.is_popup = 1
+    </sql>
+
+    <select id="selectPopup" resultType="Notice">
+        SELECT n.* FROM notice n
+        <include refid="popupWhere"/>
+        ORDER BY n.priority DESC, n.created_at DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="countPopup" resultType="long">
+        SELECT count(*) FROM notice n
+        <include refid="popupWhere"/>
+    </select>
+
+    <insert id="insertRead">
+        INSERT INTO notice_read (user_id, notice_id) VALUES (#{userId}, #{noticeId})
+        ON CONFLICT (user_id, notice_id) DO NOTHING
+    </insert>
+</mapper>

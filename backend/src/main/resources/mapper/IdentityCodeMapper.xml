@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.express.mapper.IdentityCodeMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO identity_code (user_id, code, status, expire_at)
+        VALUES (#{userId}, #{code}, #{status}, #{expireAt})
+    </insert>
+
+    <select id="selectById" resultType="IdentityCode">
+        SELECT * FROM identity_code WHERE id = #{id}
+    </select>
+
+    <select id="selectByCode" resultType="IdentityCode">
+        SELECT * FROM identity_code WHERE code = #{code}
+    </select>
+
+    <select id="selectActiveByUser" resultType="IdentityCode">
+        SELECT * FROM identity_code WHERE user_id = #{userId} AND status = 'ACTIVE'
+        ORDER BY created_at DESC LIMIT 1
+    </select>
+
+    <select id="selectPage" resultType="IdentityCode">
+        SELECT * FROM identity_code WHERE user_id = #{userId}
+        ORDER BY created_at DESC, id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countPage" resultType="long">
+        SELECT count(*) FROM identity_code WHERE user_id = #{userId}
+    </select>
+
+    <update id="revokeActiveByUser">
+        UPDATE identity_code SET status = 'REVOKED', revoked_at = now()
+        WHERE user_id = #{userId} AND status = 'ACTIVE'
+    </update>
+
+    <update id="markRevoked">
+        UPDATE identity_code SET status = 'REVOKED', revoked_at = now()
+        WHERE id = #{id} AND user_id = #{userId} AND status = 'ACTIVE'
+    </update>
+
+    <update id="touchUsed">
+        UPDATE identity_code SET use_count = use_count + 1, last_used_at = now()
+        WHERE id = #{id} AND status = 'ACTIVE' AND expire_at > now()
+    </update>
+
+    <select id="expireOutdated" resultType="IdentityCode">
+        UPDATE identity_code SET status = 'EXPIRED'
+        WHERE status = 'ACTIVE' AND expire_at &lt;= now()
+        RETURNING *
+    </select>
+</mapper>

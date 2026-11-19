@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.express.mapper.InsuranceMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO insurance_policy (policy_no, user_id, parcel_id, premium, coverage, status, expire_at)
+        VALUES (#{policyNo}, #{userId}, #{parcelId}, #{premium}, #{coverage}, #{status}, #{expireAt})
+    </insert>
+
+    <sql id="cols">
+        i.*, p.tracking_no, p.status AS parcel_status, p.courier_company
+    </sql>
+
+    <select id="selectById" resultType="InsurancePolicy">
+        SELECT <include refid="cols"/>
+        FROM insurance_policy i JOIN parcel p ON p.id = i.parcel_id
+        WHERE i.id = #{id}
+    </select>
+
+    <select id="selectByParcel" resultType="InsurancePolicy">
+        SELECT <include refid="cols"/>
+        FROM insurance_policy i JOIN parcel p ON p.id = i.parcel_id
+        WHERE i.parcel_id = #{parcelId}
+    </select>
+
+    <select id="selectPage" resultType="InsurancePolicy">
+        SELECT <include refid="cols"/>
+        FROM insurance_policy i JOIN parcel p ON p.id = i.parcel_id
+        WHERE i.user_id = #{userId}
+        <if test="status != null and status != ''">AND i.status = #{status}</if>
+        ORDER BY i.created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countPage" resultType="long">
+        SELECT count(*) FROM insurance_policy i
+        WHERE i.user_id = #{userId}
+        <if test="status != null and status != ''">AND i.status = #{status}</if>
+    </select>
+
+    <!-- 到期仍未取件的保单（供 Service 逐单入账理赔） -->
+    <select id="settleExpired" resultType="InsurancePolicy">
+        SELECT <include refid="cols"/>
+        FROM insurance_policy i JOIN parcel p ON p.id = i.parcel_id
+        WHERE i.status = 'ACTIVE' AND i.expire_at &lt; now()
+          AND p.status IN ('IN_STOCK','OVERDUE')
+    </select>
+
+    <update id="markClaimPaid">
+        UPDATE insurance_policy SET status = 'CLAIM_PAID', claimed_at = now(), settled_at = now()
+        WHERE id = #{id} AND status = 'ACTIVE'
+    </update>
+
+    <update id="expireSettled">
+        UPDATE insurance_policy SET status = 'EXPIRED'
+        WHERE status = 'ACTIVE' AND expire_at &lt; now()
+    </update>
+
+    <update id="expireByParcel">
+        UPDATE insurance_policy SET status = 'EXPIRED'
+        WHERE parcel_id = #{parcelId} AND status = 'ACTIVE'
+    </update>
+</mapper>

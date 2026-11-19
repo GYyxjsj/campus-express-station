@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.express.mapper.ProxyAuthMapper">
+
+    <sql id="voCols">
+        a.id, a.parcel_id, a.grantor_id, a.grantee_id, a.auth_code, a.status,
+        a.expire_at, a.remark, a.created_at, a.used_at, a.revoked_at,
+        p.tracking_no, p.courier_company, p.status AS parcel_status,
+        s.name AS station_name, sh.code AS shelf_code,
+        g.real_name AS grantor_name, g.username AS grantor_username,
+        e.real_name AS grantee_name, e.username AS grantee_username
+    </sql>
+
+    <sql id="voJoins">
+        FROM proxy_auth a
+        JOIN parcel p ON p.id = a.parcel_id
+        JOIN station s ON s.id = p.station_id
+        LEFT JOIN shelf sh ON sh.id = p.shelf_id
+        JOIN sys_user g ON g.id = a.grantor_id
+        JOIN sys_user e ON e.id = a.grantee_id
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO proxy_auth (parcel_id, grantor_id, grantee_id, auth_code, status, expire_at, remark)
+        VALUES (#{parcelId}, #{grantorId}, #{granteeId}, #{authCode}, 'ACTIVE', #{expireAt}, #{remark})
+    </insert>
+
+    <select id="selectById" resultType="ProxyAuth">
+        SELECT * FROM proxy_auth WHERE id = #{id}
+    </select>
+
+    <select id="selectVoById" resultType="com.campus.express.vo.ProxyAuthVO">
+        SELECT <include refid="voCols"/>
+        <include refid="voJoins"/>
+        WHERE a.id = #{id}
+    </select>
+
+    <select id="selectByAuthCode" resultType="ProxyAuth">
+        SELECT * FROM proxy_auth WHERE auth_code = #{authCode}
+    </select>
+
+    <select id="selectActiveByParcel" resultType="ProxyAuth">
+        SELECT * FROM proxy_auth WHERE parcel_id = #{parcelId} AND status = 'ACTIVE'
+    </select>
+
+    <sql id="pageWhere">
+        <where>
+            <if test="grantorId != null">AND a.grantor_id = #{grantorId}</if>
+            <if test="granteeId != null">AND a.grantee_id = #{granteeId}</if>
+            <if test="status != null and status != ''">AND a.status = #{status}</if>
+        </where>
+    </sql>
+
+    <select id="selectPage" resultType="com.campus.express.vo.ProxyAuthVO">
+        SELECT <include refid="voCols"/>
+        <include refid="voJoins"/>
+        <include refid="pageWhere"/>
+        ORDER BY a.created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countPage" resultType="long">
+        SELECT count(*) FROM proxy_auth a
+        <include refid="pageWhere"/>
+    </select>
+
+    <!-- 核销：ACTIVE 且未过期 → USED -->
+    <update id="markUsed">
+        UPDATE proxy_auth SET status = 'USED', used_at = now()
+        WHERE id = #{id} AND status = 'ACTIVE' AND expire_at &gt; now()
+    </update>
+
+    <!-- 撤销：仅本人 + ACTIVE -->
+    <update id="markRevoked">
+        UPDATE proxy_auth SET status = 'REVOKED', revoked_at = now()
+        WHERE id = #{id} AND grantor_id = #{grantorId} AND status = 'ACTIVE'
+    </update>
+
+    <!-- UPDATE ... RETURNING：过期迁移并返回受影响授权（供失效通知） -->
+    <select id="expireOutdated" resultType="ProxyAuth">
+        UPDATE proxy_auth SET status = 'EXPIRED'
+        WHERE status = 'ACTIVE' AND expire_at &lt;= now()
+        RETURNING *
+    </select>
+
+    <select id="countByStatus" resultType="long">
+        SELECT count(*) FROM proxy_auth WHERE status = #{status}
+    </select>
+</mapper>

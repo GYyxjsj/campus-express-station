@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.express.mapper.StationMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO station (name, location, open_hours, contact, status)
+        VALUES (#{name}, #{location}, #{openHours}, #{contact}, #{status})
+    </insert>
+
+    <select id="selectById" resultType="Station">
+        SELECT * FROM station WHERE id = #{id}
+    </select>
+
+    <select id="selectAll" resultType="Station">
+        SELECT * FROM station ORDER BY id
+    </select>
+
+    <update id="update">
+        UPDATE station
+        SET name = #{name}, location = #{location}, open_hours = #{openHours},
+            contact = #{contact}, status = #{status}
+        WHERE id = #{id}
+    </update>
+</mapper>

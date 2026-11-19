@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.express.mapper.ProxyOrderMapper">
+
+    <sql id="voCols">
+        o.*, (o.fee + o.tip) AS total, (o.fee + o.tip - o.commission) AS runner_income,
+        p.tracking_no, p.courier_company, p.status AS parcel_status, p.pickup_code,
+        s.name AS station_name, s.location AS station_location, sh.code AS shelf_code,
+        ru.real_name AS requester_name, ru.username AS requester_username, ru.phone AS requester_phone,
+        rn.real_name AS runner_name, rn.username AS runner_username, rn.phone AS runner_phone,
+        a.auth_code
+    </sql>
+
+    <sql id="voJoins">
+        FROM proxy_order o
+        JOIN parcel p ON p.id = o.parcel_id
+        JOIN station s ON s.id = p.station_id
+        LEFT JOIN shelf sh ON sh.id = p.shelf_id
+        JOIN sys_user ru ON ru.id = o.requester_id
+        LEFT JOIN sys_user rn ON rn.id = o.runner_id
+        LEFT JOIN proxy_auth a ON a.id = o.auth_id
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO proxy_order (order_no, parcel_id, requester_id, fee, tip, commission, status,
+                                 deliver_to, note, expire_at)
+        VALUES (#{orderNo}, #{parcelId}, #{requesterId}, #{fee}, #{tip}, #{commission}, #{status},
+                #{deliverTo}, #{note}, #{expireAt})
+    </insert>
+
+    <select id="selectById" resultType="ProxyOrder">
+        SELECT * FROM proxy_order WHERE id = #{id}
+    </select>
+
+    <select id="selectVoById" resultType="com.campus.express.vo.ProxyOrderVO">
+        SELECT <include refid="voCols"/>
+        <include refid="voJoins"/>
+        WHERE o.id = #{id}
+    </select>
+
+    <select id="selectActiveByParcel" resultType="ProxyOrder">
+        SELECT * FROM proxy_order
+        WHERE parcel_id = #{parcelId} AND status IN ('OPEN','ACCEPTED','PICKED','DELIVERED')
+        ORDER BY created_at DESC LIMIT 1
+    </select>
+
+    <select id="selectByAuthId" resultType="ProxyOrder">
+        SELECT * FROM proxy_order WHERE auth_id = #{authId} ORDER BY id DESC LIMIT 1
+    </select>
+
+    <sql id="pageWhere">
+        <where>
+            <if test="requesterId != null">AND o.requester_id = #{requesterId}</if>
+            <if test="runnerId != null">AND o.runner_id = #{runnerId}</if>
+            <if test="excludeRequesterId != null">AND o.requester_id &lt;&gt; #{excludeRequesterId}</if>
+            <if test="status != null and status != ''">AND o.status = #{status}</if>
+            <if test="stationId != null">AND p.station_id = #{stationId}</if>
+            <if test="openOnly != null and openOnly">AND o.status = 'OPEN' AND o.expire_at &gt; now()</if>
+            <if test="keyword != null and keyword != ''">
+                AND (o.order_no ILIKE '%' || #{keyword} || '%'
+                     OR p.tracking_no ILIKE '%' || #{keyword} || '%'
+                     OR ru.real_name ILIKE '%' || #{keyword} || '%'
+                     OR rn.real_name ILIKE '%' || #{keyword} || '%'
+                     OR o.deliver_to ILIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectPage" resultType="com.campus.express.vo.ProxyOrderVO">
+        SELECT <include refid="voCols"/>
+        <include refid="voJoins"/>
+        <include refid="pageWhere"/>
+        ORDER BY ${sortCol} ${sortDir}, o.id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countPage" resultType="long">
+        SELECT count(*)
+        <include refid="voJoins"/>
+        <include refid="pageWhere"/>
+    </select>
+
+    <update id="setAuthId">
+        UPDATE proxy_order SET auth_id = #{authId} WHERE id = #{id}
+    </update>
+
+    <update id="markAccepted">
+        UPDATE proxy_order SET status = 'ACCEPTED', runner_id = #{runnerId}, accepted_at = now()
+        WHERE id = #{id} AND status = 'OPEN' AND runner_id IS NULL AND expire_at > now()
+    </update>
+
+    <update id="markPicked">
+        UPDATE proxy_order SET status = 'PICKED', picked_at = now()
+        WHERE id = #{id} AND status = 'ACCEPTED' AND runner_id = #{runnerId}
+    </update>
+
+    <update id="markPickedBySystem">
+        UPDATE proxy_order SET status = 'PICKED', picked_at = now()
+        WHERE id = #{id} AND status = 'ACCEPTED'
+    </update>
+
+    <update id="markDelivered">
+        UPDATE proxy_order SET status = 'DELIVERED', delivered_at = now()
+        WHERE id = #{id} AND status = 'PICKED' AND runner_id = #{runnerId}
+    </update>
+
+    <update id="markDone">
+        UPDATE proxy_order SET status = 'DONE', done_at = now()
+        WHERE id = #{id} AND status = 'DELIVERED'
+    </update>
+
+    <update id="markCancelled">
+        UPDATE proxy_order SET status = 'CANCELLED', cancelled_at = now(), cancel_reason = #{reason}
+        WHERE id = #{id} AND status IN ('OPEN','ACCEPTED','PICKED','DELIVERED')
+    </update>
+
+    <update id="rate">
+        UPDATE proxy_order SET rating = #{rating}, review = #{review}
+        WHERE id = #{id} AND requester_id = #{requesterId} AND status = 'DONE' AND rating IS NULL
+    </update>
+
+    <select id="expireOpen" resultType="ProxyOrder">
+        UPDATE proxy_order SET status = 'EXPIRED', cancelled_at = now(), cancel_reason = '超时无人接单，自动关闭并退款'
+        WHERE status = 'OPEN' AND expire_at &lt;= now()
+        RETURNING *
+    </select>
+
+    <select id="autoConfirm" resultType="ProxyOrder">
+        UPDATE proxy_order SET status = 'DONE', done_at = now()
+        WHERE status = 'DELIVERED' AND delivered_at &lt;= now() - interval '24 hours'
+        RETURNING *
+    </select>
+
+    <select id="stats" resultType="map">
+        SELECT count(*) AS "total",
+               count(*) FILTER (WHERE status = 'OPEN') AS "open",
+               count(*) FILTER (WHERE status IN ('ACCEPTED','PICKED','DELIVERED')) AS "running",
+               count(*) FILTER (WHERE status = 'DONE') AS "done",
+               count(*) FILTER (WHERE status IN ('CANCELLED','EXPIRED')) AS "closed",
+               count(*) FILTER (WHERE created_at >= date_trunc('day', now())) AS "today",
+               COALESCE(sum(commission) FILTER (WHERE status = 'DONE'), 0) AS "commission",
+               COALESCE(sum(fee + tip) FILTER (WHERE status = 'DONE'), 0) AS "gmv",
+               ROUND(AVG(rating) FILTER (WHERE rating IS NOT NULL), 2) AS "avgRating",
+               count(DISTINCT runner_id) FILTER (WHERE runner_id IS NOT NULL) AS "runners"
+        FROM proxy_order
+    </select>
+
+    <select id="statusDistribution" resultType="map">
+        SELECT status AS "name", count(*) AS "value" FROM proxy_order GROUP BY status ORDER BY "value" DESC
+    </select>
+
+    <select id="topRunners" resultType="map">
+        SELECT u.id AS "userId", u.real_name AS "realName", u.username AS "username",
+               count(*) AS "doneCount",
+               COALESCE(sum(o.fee + o.tip - o.commission), 0) AS "income",
+               ROUND(AVG(o.rating), 2) AS "avgRating"
+        FROM proxy_order o JOIN sys_user u ON u.id = o.runner_id
+        WHERE o.status = 'DONE'
+        GROUP BY u.id, u.real_name, u.username
+        ORDER BY "doneCount" DESC, "income" DESC
+        LIMIT #{limit}
+    </select>
+</mapper>

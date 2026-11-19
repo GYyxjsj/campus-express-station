@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.express.mapper.CouponMapper">
+
+    <select id="selectTemplate" resultType="CouponTemplate">
+        SELECT * FROM coupon_template WHERE id = #{id}
+    </select>
+
+    <insert id="insertTemplate" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO coupon_template (name, type, amount, min_spend, scope, total_qty, valid_days, description, status)
+        VALUES (#{name}, #{type}, #{amount}, #{minSpend}, #{scope}, #{totalQty}, #{validDays}, #{description}, #{status})
+    </insert>
+
+    <select id="selectTemplates" resultType="CouponTemplate">
+        SELECT * FROM coupon_template
+        <where>
+            <if test="status != null">AND status = #{status}</if>
+        </where>
+        ORDER BY id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countTemplates" resultType="long">
+        SELECT count(*) FROM coupon_template
+        <where>
+            <if test="status != null">AND status = #{status}</if>
+        </where>
+    </select>
+
+    <update id="claimTemplate">
+        UPDATE coupon_template SET claimed_qty = claimed_qty + 1
+        WHERE id = #{id} AND status = 1 AND claimed_qty &lt; total_qty
+    </update>
+
+    <!-- 用户卡券 -->
+    <insert id="insertUserCoupon" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user_coupon (template_id, user_id, code, status, source, expire_at)
+        VALUES (#{templateId}, #{userId}, #{code}, #{status}, #{source}, #{expireAt})
+    </insert>
+
+    <sql id="couponCols">
+        c.id, c.template_id, c.user_id, c.code, c.status, c.source, c.expire_at, c.used_at, c.created_at,
+        t.name, t.type, t.amount, t.min_spend, t.scope, t.description
+    </sql>
+
+    <select id="selectUserCoupon" resultType="UserCoupon">
+        SELECT <include refid="couponCols"/>
+        FROM user_coupon c JOIN coupon_template t ON t.id = c.template_id
+        WHERE c.id = #{id}
+    </select>
+
+    <select id="selectByTemplateUser" resultType="UserCoupon">
+        SELECT <include refid="couponCols"/>
+        FROM user_coupon c JOIN coupon_template t ON t.id = c.template_id
+        WHERE c.template_id = #{templateId} AND c.user_id = #{userId}
+    </select>
+
+    <select id="selectMyCoupons" resultType="UserCoupon">
+        SELECT <include refid="couponCols"/>
+        FROM user_coupon c JOIN coupon_template t ON t.id = c.template_id
+        WHERE c.user_id = #{userId}
+        <if test="status != null and status != ''">AND c.status = #{status}</if>
+        ORDER BY CASE c.status WHEN 'UNUSED' THEN 0 WHEN 'USED' THEN 1 ELSE 2 END, c.expire_at
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countMyCoupons" resultType="long">
+        SELECT count(*) FROM user_coupon c
+        WHERE c.user_id = #{userId}
+        <if test="status != null and status != ''">AND c.status = #{status}</if>
+    </select>
+
+    <update id="expireCoupons">
+        UPDATE user_coupon SET status = 'EXPIRED'
+        WHERE status = 'UNUSED' AND expire_at &lt; now()
+    </update>
+
+    <!-- 兑换码 -->
+    <select id="selectRedeemByCode" resultType="RedeemCode">
+        SELECT r.*, t.name AS template_name
+        FROM redeem_code r JOIN coupon_template t ON t.id = r.template_id
+        WHERE r.code = #{code}
+    </select>
+
+    <update id="markRedeemUsed">
+        UPDATE redeem_code SET status = 'USED', used_by = #{userId}, used_at = now()
+        WHERE id = #{id} AND status = 'UNUSED'
+    </update>
+
+    <insert id="insertRedeemCode" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO redeem_code (code, template_id, status)
+        VALUES (#{code}, #{templateId}, #{status})
+    </insert>
+
+    <select id="selectRedeemPage" resultType="RedeemCode">
+        SELECT r.*, t.name AS template_name, u.real_name AS used_by_name
+        FROM redeem_code r
+        JOIN coupon_template t ON t.id = r.template_id
+        LEFT JOIN sys_user u ON u.id = r.used_by
+        <where>
+            <if test="status != null and status != ''">AND r.status = #{status}</if>
+        </where>
+        ORDER BY r.id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countRedeemPage" resultType="long">
+        SELECT count(*) FROM redeem_code r
+        <where>
+            <if test="status != null and status != ''">AND r.status = #{status}</if>
+        </where>
+    </select>
+</mapper>

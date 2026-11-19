@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.express.mapper.ParcelTraceMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO parcel_trace (parcel_id, node, title, location, operator_id, operator_name,
+                                  operator_role, detail, happened_at)
+        VALUES (#{parcelId}, #{node}, #{title}, #{location}, #{operatorId}, #{operatorName},
+                #{operatorRole}, #{detail}, COALESCE(#{happenedAt}, now()))
+    </insert>
+
+    <select id="selectByParcel" resultType="ParcelTrace">
+        SELECT * FROM parcel_trace WHERE parcel_id = #{parcelId}
+        ORDER BY happened_at, id
+    </select>
+
+    <sql id="voCols">
+        t.*, p.tracking_no, p.courier_company, p.status AS parcel_status,
+        s.name AS station_name, u.real_name AS owner_name
+    </sql>
+
+    <sql id="voJoins">
+        FROM parcel_trace t
+        JOIN parcel p ON p.id = t.parcel_id
+        JOIN station s ON s.id = p.station_id
+        JOIN sys_user u ON u.id = p.owner_id
+    </sql>
+
+    <sql id="pageWhere">
+        <where>
+            <if test="parcelId != null">AND t.parcel_id = #{parcelId}</if>
+            <if test="node != null and node != ''">AND t.node = #{node}</if>
+            <if test="operatorId != null">AND t.operator_id = #{operatorId}</if>
+            <if test="stationId != null">AND p.station_id = #{stationId}</if>
+            <if test="from != null and from != ''">AND t.happened_at >= #{from}::timestamptz</if>
+            <if test="to != null and to != ''">AND t.happened_at &lt; (#{to}::date + 1)</if>
+            <if test="keyword != null and keyword != ''">
+                AND (p.tracking_no ILIKE '%' || #{keyword} || '%'
+                     OR t.operator_name ILIKE '%' || #{keyword} || '%'
+                     OR t.location ILIKE '%' || #{keyword} || '%'
+                     OR t.title ILIKE '%' || #{keyword} || '%'
+                     OR u.real_name ILIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectPage" resultType="com.campus.express.vo.ParcelTraceVO">
+        SELECT <include refid="voCols"/>
+        <include refid="voJoins"/>
+        <include refid="pageWhere"/>
+        ORDER BY ${sortCol} ${sortDir}, t.id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countPage" resultType="long">
+        SELECT count(*)
+        <include refid="voJoins"/>
+        <include refid="pageWhere"/>
+    </select>
+
+    <select id="selectRecent" resultType="com.campus.express.vo.ParcelTraceVO">
+        SELECT <include refid="voCols"/>
+        <include refid="voJoins"/>
+        ORDER BY t.happened_at DESC, t.id DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="stats" resultType="map">
+        SELECT count(*) AS "total",
+               count(*) FILTER (WHERE happened_at >= date_trunc('day', now())) AS "today",
+               count(*) FILTER (WHERE node = 'INSPECT') AS "inspections",
+               count(DISTINCT operator_id) FILTER (WHERE operator_role IN ('STAFF','ADMIN')) AS "inspectors",
+               count(DISTINCT parcel_id) AS "parcels",
+               count(DISTINCT location) AS "locations"
+        FROM parcel_trace
+    </select>
+
+    <select id="nodeDistribution" resultType="map">
+        SELECT node AS "name", count(*) AS "value" FROM parcel_trace GROUP BY node ORDER BY "value" DESC
+    </select>
+
+    <select id="topInspectors" resultType="map">
+        SELECT t.operator_id AS "userId", t.operator_name AS "realName", t.operator_role AS "role",
+               count(*) AS "total",
+               count(*) FILTER (WHERE t.node = 'INSPECT') AS "inspections",
+               count(*) FILTER (WHERE t.node IN ('PICKUP','PICKUP_IDENTITY')) AS "pickups",
+               max(t.happened_at) AS "lastAt"
+        FROM parcel_trace t
+        WHERE t.operator_id IS NOT NULL AND t.operator_role IN ('STAFF','ADMIN')
+        GROUP BY t.operator_id, t.operator_name, t.operator_role
+        ORDER BY "total" DESC
+        LIMIT #{limit}
+    </select>
+</mapper>

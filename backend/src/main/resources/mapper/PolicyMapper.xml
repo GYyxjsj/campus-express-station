@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.express.mapper.PolicyMapper">
+
+    <sql id="listCols">
+        p.id, p.code, p.title, p.version, p.category, p.summary, p.required, p.status,
+        p.effective_at, p.publisher_id, p.created_at, p.updated_at,
+        pub.real_name AS publisher_name,
+        (SELECT count(*) FROM policy_acceptance a WHERE a.policy_id = p.id) AS accept_count,
+        pa.version AS accepted_version, pa.accepted_at,
+        (pa.id IS NOT NULL) AS accepted
+    </sql>
+
+    <sql id="listJoins">
+        FROM policy p
+        LEFT JOIN sys_user pub ON pub.id = p.publisher_id
+        LEFT JOIN policy_acceptance pa ON pa.policy_id = p.id
+            <if test="userId != null">AND pa.user_id = #{userId}</if>
+            AND pa.version = p.version
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO policy (code, title, version, category, summary, content, required, status,
+                            effective_at, publisher_id)
+        VALUES (#{code}, #{title}, #{version}, #{category}, #{summary}, #{content}, #{required},
+                #{status}, COALESCE(#{effectiveAt}, now()), #{publisherId})
+    </insert>
+
+    <update id="update">
+        UPDATE policy
+        SET title = #{title}, version = #{version}, category = #{category}, summary = #{summary},
+            content = #{content}, required = #{required}, status = #{status},
+            effective_at = COALESCE(#{effectiveAt}, effective_at), updated_at = now()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE policy SET status = #{status}, updated_at = now() WHERE id = #{id}
+    </update>
+
+    <select id="selectById" resultType="Policy">
+        SELECT * FROM policy WHERE id = #{id}
+    </select>
+
+    <select id="selectByCode" resultType="Policy">
+        SELECT * FROM policy WHERE code = #{code}
+    </select>
+
+    <select id="selectVoByCode" resultType="com.campus.express.vo.PolicyVO">
+        SELECT <include refid="listCols"/>, p.content
+        <include refid="listJoins"/>
+        WHERE p.code = #{code}
+    </select>
+
+    <select id="selectVoById" resultType="com.campus.express.vo.PolicyVO">
+        SELECT <include refid="listCols"/>, p.content
+        <include refid="listJoins"/>
+        WHERE p.id = #{id}
+    </select>
+
+    <select id="selectList" resultType="com.campus.express.vo.PolicyVO">
+        SELECT <include refid="listCols"/>
+        <include refid="listJoins"/>
+        <where>
+            <if test="publishedOnly">AND p.status = 1</if>
+            <if test="category != null and category != ''">AND p.category = #{category}</if>
+            <if test="keyword != null and keyword != ''">
+                AND (p.title ILIKE '%' || #{keyword} || '%' OR p.code ILIKE '%' || #{keyword} || '%'
+                     OR p.summary ILIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+        ORDER BY p.required DESC, p.effective_at DESC, p.id
+    </select>
+
+    <select id="selectPending" resultType="com.campus.express.vo.PolicyVO">
+        SELECT <include refid="listCols"/>, p.content
+        <include refid="listJoins"/>
+        WHERE p.status = 1 AND p.required = 1 AND pa.id IS NULL
+        ORDER BY p.id
+    </select>
+
+    <sql id="adminWhere">
+        <where>
+            <if test="category != null and category != ''">AND p.category = #{category}</if>
+            <if test="status != null">AND p.status = #{status}</if>
+            <if test="keyword != null and keyword != ''">
+                AND (p.title ILIKE '%' || #{keyword} || '%' OR p.code ILIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectAdminPage" resultType="com.campus.express.vo.PolicyVO">
+        SELECT p.id, p.code, p.title, p.version, p.category, p.summary, p.required, p.status,
+               p.effective_at, p.publisher_id, p.created_at, p.updated_at,
+               pub.real_name AS publisher_name,
+               (SELECT count(*) FROM policy_acceptance a WHERE a.policy_id = p.id) AS accept_count,
+               false AS accepted
+        FROM policy p LEFT JOIN sys_user pub ON pub.id = p.publisher_id
+        <include refid="adminWhere"/>
+        ORDER BY ${sortCol} ${sortDir}, p.id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAdminPage" resultType="long">
+        SELECT count(*) FROM policy p
+        <include refid="adminWhere"/>
+    </select>
+
+    <insert id="insertAcceptance">
+        INSERT INTO policy_acceptance (user_id, policy_id, version, ip)
+        VALUES (#{userId}, #{policyId}, #{version}, #{ip})
+        ON CONFLICT (user_id, policy_id, version) DO NOTHING
+    </insert>
+
+    <sql id="acceptWhere">
+        <where>
+            <if test="policyId != null">AND a.policy_id = #{policyId}</if>
+            <if test="keyword != null and keyword != ''">
+                AND (u.username ILIKE '%' || #{keyword} || '%' OR u.real_name ILIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectAcceptances" resultType="map">
+        SELECT a.id AS "id", a.user_id AS "userId", u.username AS "username", u.real_name AS "realName",
+               a.policy_id AS "policyId", p.title AS "policyTitle", p.code AS "policyCode",
+               a.version AS "version", a.ip AS "ip", a.accepted_at AS "acceptedAt"
+        FROM policy_acceptance a
+        JOIN sys_user u ON u.id = a.user_id
+        JOIN policy p ON p.id = a.policy_id
+        <include refid="acceptWhere"/>
+        ORDER BY ${sortCol} ${sortDir}, a.id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAcceptances" resultType="long">
+        SELECT count(*) FROM policy_acceptance a JOIN sys_user u ON u.id = a.user_id
+        <include refid="acceptWhere"/>
+    </select>
+
+    <select id="acceptanceStats" resultType="map">
+        SELECT (SELECT count(*) FROM policy) AS "policies",
+               (SELECT count(*) FROM policy WHERE status = 1) AS "published",
+               (SELECT count(*) FROM policy WHERE required = 1 AND status = 1) AS "required",
+               (SELECT count(*) FROM policy_acceptance) AS "acceptances",
+               (SELECT count(*) FROM policy_acceptance WHERE accepted_at >= date_trunc('day', now())) AS "today",
+               (SELECT count(DISTINCT user_id) FROM policy_acceptance) AS "signers"
+    </select>
+</mapper>

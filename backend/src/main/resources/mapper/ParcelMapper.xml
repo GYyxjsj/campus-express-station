@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.express.mapper.ParcelMapper">
+
+    <sql id="voCols">
+        p.id, p.tracking_no, p.courier_company, p.owner_id, p.station_id, p.shelf_id,
+        p.pickup_code, p.status, p.remark, p.inbound_time, p.outbound_time, p.return_reason,
+        p.created_at, p.updated_at,
+        u.real_name AS owner_name, u.username AS owner_username, u.phone AS owner_phone,
+        s.name AS station_name, sh.code AS shelf_code,
+        pa.id AS active_auth_id, gu.real_name AS active_auth_grantee
+    </sql>
+
+    <sql id="voJoins">
+        FROM parcel p
+        JOIN sys_user u ON u.id = p.owner_id
+        JOIN station s ON s.id = p.station_id
+        LEFT JOIN shelf sh ON sh.id = p.shelf_id
+        LEFT JOIN proxy_auth pa ON pa.parcel_id = p.id AND pa.status = 'ACTIVE'
+        LEFT JOIN sys_user gu ON gu.id = pa.grantee_id
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO parcel (tracking_no, courier_company, owner_id, station_id, shelf_id,
+                            pickup_code, status, remark, inbound_time)
+        VALUES (#{trackingNo}, #{courierCompany}, #{ownerId}, #{stationId}, #{shelfId},
+                #{pickupCode}, #{status}, #{remark}, now())
+    </insert>
+
+    <select id="selectById" resultType="Parcel">
+        SELECT * FROM parcel WHERE id = #{id}
+    </select>
+
+    <select id="selectVoById" resultType="com.campus.express.vo.ParcelVO">
+        SELECT <include refid="voCols"/>
+        <include refid="voJoins"/>
+        WHERE p.id = #{id}
+    </select>
+
+    <select id="selectByTrackingNo" resultType="Parcel">
+        SELECT * FROM parcel WHERE tracking_no = #{trackingNo}
+    </select>
+
+    <sql id="pageWhere">
+        <where>
+            <if test="status != null and status != ''">AND p.status = #{status}</if>
+            <if test="stationId != null">AND p.station_id = #{stationId}</if>
+            <if test="ownerId != null">AND p.owner_id = #{ownerId}</if>
+            <if test="overdueOnly != null and overdueOnly">AND p.status = 'OVERDUE'</if>
+            <if test="keyword != null and keyword != ''">
+                AND (p.tracking_no ILIKE '%' || #{keyword} || '%'
+                     OR u.real_name ILIKE '%' || #{keyword} || '%'
+                     OR u.username ILIKE '%' || #{keyword} || '%'
+                     OR p.pickup_code = #{keyword})
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectPage" resultType="com.campus.express.vo.ParcelVO">
+        SELECT <include refid="voCols"/>
+        <include refid="voJoins"/>
+        <include refid="pageWhere"/>
+        ORDER BY ${sortCol} ${sortDir}, p.id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countPage" resultType="long">
+        SELECT count(*)
+        FROM parcel p JOIN sys_user u ON u.id = p.owner_id
+        <include refid="pageWhere"/>
+    </select>
+
+    <!-- 核销：前置状态+取件码条件更新（影响行数=0 即失败，防并发重复核销） -->
+    <update id="markPickedUp">
+        UPDATE parcel
+        SET status = 'PICKED_UP', outbound_time = now(), updated_at = now()
+        WHERE id = #{id}
+          AND status IN ('IN_STOCK', 'OVERDUE')
+          AND pickup_code = #{pickupCode}
+    </update>
+
+    <update id="markReturned">
+        UPDATE parcel
+        SET status = 'RETURNED', return_reason = #{reason}, outbound_time = now(), updated_at = now()
+        WHERE id = #{id} AND status IN ('IN_STOCK', 'OVERDUE')
+    </update>
+
+    <update id="markPickedUpByIdentity">
+        UPDATE parcel
+        SET status = 'PICKED_UP', outbound_time = now(), updated_at = now()
+        WHERE id = #{id} AND status IN ('IN_STOCK', 'OVERDUE')
+    </update>
+
+    <update id="updateShelf">
+        UPDATE parcel SET shelf_id = #{shelfId}, updated_at = now() WHERE id = #{id}
+    </update>
+
+    <!-- UPDATE ... RETURNING：一次语句完成状态迁移并返回受影响包裹（供告警通知） -->
+    <select id="markOverdue" resultType="Parcel">
+        UPDATE parcel
+        SET status = 'OVERDUE', updated_at = now()
+        WHERE status = 'IN_STOCK' AND inbound_time &lt; #{before}
+        RETURNING *
+    </select>
+
+    <!-- 催领候选：在库/滞留、入库超阈值、且最近一次 REMIND 距今超过 remindGapHours（或从未催领） -->
+    <select id="selectRemindCandidates" resultType="Parcel">
+        SELECT p.*
+        FROM parcel p
+        WHERE p.status IN ('IN_STOCK', 'OVERDUE')
+          AND p.inbound_time &lt; #{before}
+          AND NOT EXISTS (
+              SELECT 1 FROM notification n
+              WHERE n.parcel_id = p.id AND n.type = 'REMIND' AND n.channel = 'IN_APP'
+                AND n.sent_at &gt; now() - (#{remindGapHours} || ' hours')::interval
+          )
+        ORDER BY p.inbound_time
+        LIMIT #{limit}
+    </select>
+
+    <select id="countByStatus" resultType="long">
+        SELECT count(*) FROM parcel WHERE status = #{status}
+    </select>
+
+    <select id="countTodayInbound" resultType="long">
+        SELECT count(*) FROM parcel WHERE inbound_time >= date_trunc('day', now())
+    </select>
+
+    <select id="countTodayOutbound" resultType="long">
+        SELECT count(*) FROM parcel
+        WHERE status = 'PICKED_UP' AND outbound_time >= date_trunc('day', now())
+    </select>    <!-- 近 N 日出入库趋势：generate_series 补零 -->
+    <select id="selectTrend" resultType="map">
+        SELECT to_char(d.day, 'MM-DD') AS day,
+               COALESCE(i.cnt, 0) AS inbound,
+               COALESCE(o.cnt, 0) AS outbound
+        FROM generate_series(date_trunc('day', now()) - (#{days} - 1) * interval '1 day',
+                             date_trunc('day', now()), interval '1 day') AS d(day)
+        LEFT JOIN (
+            SELECT date_trunc('day', inbound_time) AS day, count(*) AS cnt
+            FROM parcel GROUP BY 1
+        ) i ON i.day = d.day
+        LEFT JOIN (
+            SELECT date_trunc('day', outbound_time) AS day, count(*) AS cnt
+            FROM parcel WHERE status = 'PICKED_UP' GROUP BY 1
+        ) o ON o.day = d.day
+        ORDER BY d.day
+    </select>
+
+    <select id="selectStatusDistribution" resultType="map">
+        SELECT status AS name, count(*) AS value FROM parcel GROUP BY status
+    </select>
+
+    <!-- 近 N 周 星期×小时 热力：dow 0=周一 … 6=周日 -->
+    <select id="selectHeatmap" resultType="map">
+        WITH grid AS (
+            SELECT d.dow, h.hr FROM generate_series(0, 6) AS d(dow)
+            CROSS JOIN generate_series(0, 23) AS h(hr)
+        ), src AS (
+            SELECT ((EXTRACT(DOW FROM inbound_time)::int + 6) % 7) AS dow,
+                   EXTRACT(HOUR FROM inbound_time)::int AS hr,
+                   1 AS inb, 0 AS outb
+            FROM parcel WHERE inbound_time >= now() - #{weeks} * interval '1 week'
+            UNION ALL
+            SELECT ((EXTRACT(DOW FROM outbound_time)::int + 6) % 7),
+                   EXTRACT(HOUR FROM outbound_time)::int, 0, 1
+            FROM parcel
+            WHERE outbound_time IS NOT NULL AND status = 'PICKED_UP'
+              AND outbound_time >= now() - #{weeks} * interval '1 week'
+        )
+        SELECT g.dow AS "dow", g.hr AS "hour",
+               COALESCE(sum(s.inb), 0) AS "inbound",
+               COALESCE(sum(s.outb), 0) AS "outbound"
+        FROM grid g LEFT JOIN src s ON s.dow = g.dow AND s.hr = g.hr
+        GROUP BY g.dow, g.hr
+        ORDER BY g.dow, g.hr
+    </select>
+
+    <select id="selectCourierDistribution" resultType="map">
+        SELECT courier_company AS name, count(*) AS value
+        FROM parcel GROUP BY courier_company ORDER BY value DESC
+    </select>
+</mapper>

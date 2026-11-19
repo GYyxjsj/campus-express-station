@@ -1,0 +1,396 @@
+/* ============================================================
+ * Art Design Pro 风格设计令牌层
+ * 参考 Daymychen/art-design-pro（MIT）源码设计变量：
+ * 主色 #5D87FF / success #13deb9 / warning #ffae1f / danger #fa896b
+ * 灰阶 art-gray-100~900、圆角公式、卡片阴影、亮暗双主题
+ * ============================================================ */
+
+:root {
+  /* ---- art 灰阶（亮色） ---- */
+  --art-gray-100: #f9fafb;
+  --art-gray-200: #f2f4f5;
+  --art-gray-300: #e6eaeb;
+  --art-gray-400: #dbdfe1;
+  --art-gray-500: #949eb7;
+  --art-gray-600: #7987a1;
+  --art-gray-700: #4d5875;
+  --art-gray-800: #383853;
+  --art-gray-900: #323251;
+
+  /* ---- 背景 / 盒子 / 边框 ---- */
+  --default-bg-color: #fafbfc;
+  --default-box-color: #ffffff;
+  --art-card-border: rgba(0, 0, 0, 0.08);
+  --default-border: #e2e8ee;
+  --art-hover-color: #edeff0;
+  --art-active-color: #f2f4f5;
+  --art-el-active-color: #f2f4f5;
+
+  /* ---- 圆角体系 ---- */
+  --custom-radius: 0.75rem; /* 12px */
+  --art-radius-card: calc(var(--custom-radius) + 4px);
+  --art-radius-card-sm: var(--custom-radius);
+  --art-radius-card-xs: calc(var(--custom-radius) - 4px);
+  --art-radius-table: calc(var(--custom-radius) / 2 + 2px);
+
+  /* ---- 卡片阴影（shadow 模式） ---- */
+  --art-card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03),
+    0 1px 2px -1px rgba(0, 0, 0, 0.08);
+  --art-card-shadow-hover: 0 4px 12px 0 rgba(0, 0, 0, 0.06),
+    0 2px 6px -2px rgba(0, 0, 0, 0.08);
+
+  /* ---- 品牌主色 ---- */
+  --art-primary: #5d87ff;
+  --art-success: #13deb9;
+  --art-warning: #ffae1f;
+  --art-danger: #fa896b;
+  --art-error-red: #ff4d4f;
+
+  /* ---- Element Plus 变量覆盖（亮色） ---- */
+  --el-color-primary: #5d87ff;
+  --el-color-primary-light-3: #8eabff;
+  --el-color-primary-light-5: #aec3ff;
+  --el-color-primary-light-7: #cedbff;
+  --el-color-primary-light-8: #dfe7ff;
+  --el-color-primary-light-9: #eff3ff;
+  --el-color-primary-dark-2: #4a6ccc;
+
+  --el-color-success: #13deb9;
+  --el-color-success-light-3: #5ae8ce;
+  --el-color-success-light-5: #89efdc;
+  --el-color-success-light-7: #b8f5ea;
+  --el-color-success-light-8: #d0f8f1;
+  --el-color-success-light-9: #e7fcf8;
+  --el-color-success-dark-2: #0fb294;
+
+  --el-color-warning: #ffae1f;
+  --el-color-warning-light-3: #ffc662;
+  --el-color-warning-light-5: #ffd78f;
+  --el-color-warning-light-7: #ffe7bc;
+  --el-color-warning-light-8: #ffe7d2;
+  --el-color-warning-light-9: #fff7e8;
+  --el-color-warning-dark-2: #cc8b19;
+
+  --el-color-danger: #fa896b;
+  --el-color-danger-light-3: #fcac97;
+  --el-color-danger-light-5: #fdc4b5;
+  --el-color-danger-light-7: #fedcd3;
+  --el-color-danger-light-8: #fee7e1;
+  --el-color-danger-light-9: #fef3f0;
+  --el-color-danger-dark-2: #c86e56;
+
+  --el-color-error: #fa896b;
+  --el-color-error-light-3: #fcac97;
+  --el-color-error-light-5: #fdc4b5;
+  --el-color-error-light-7: #fedcd3;
+  --el-color-error-light-8: #fee7e1;
+  --el-color-error-light-9: #fef3f0;
+  --el-color-error-dark-2: #c86e56;
+
+  --el-color-info: #7987a1;
+  --el-color-info-light-3: #a1abbf;
+  --el-color-info-light-5: #bcc3d0;
+  --el-color-info-light-7: #d7dbe2;
+  --el-color-info-light-8: #e5e7ec;
+  --el-color-info-light-9: #f2f3f6;
+  --el-color-info-dark-2: #616c81;
+
+  --el-text-color-primary: #323251;
+  --el-text-color-regular: #4d5875;
+  --el-text-color-secondary: #7987a1;
+  --el-text-color-placeholder: #949eb7;
+  --el-border-color: #dbdfe1;
+  --el-border-color-light: #e6eaeb;
+  --el-border-color-lighter: #e6eaeb;
+  --el-border-color-extra-light: #f2f4f5;
+  --el-fill-color-light: #f2f4f5;
+  --el-fill-color-lighter: #f9fafb;
+  --el-bg-color: #ffffff;
+  --el-bg-color-page: #fafbfc;
+  --el-bg-color-overlay: #ffffff;
+
+  --el-border-radius-base: calc(var(--custom-radius) / 3 + 2px);
+  --el-border-radius-small: calc(var(--custom-radius) / 3 + 4px);
+  --el-border-radius-round: 20px;
+  --el-box-shadow-light: var(--art-card-shadow);
+
+  --el-font-family: 'Inter', 'Helvetica Neue', Helvetica, 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+}/* ---- 暗色主题（html.dark） ---- */
+html.dark {
+  --art-gray-100: #110f0f;
+  --art-gray-200: #17171c;
+  --art-gray-300: #393946;
+  --art-gray-400: #505062;
+  --art-gray-500: #73738c;
+  --art-gray-600: #8f8fa3;
+  --art-gray-700: #ababba;
+  --art-gray-800: #c7c7d1;
+  --art-gray-900: #e3e3e8;
+
+  --default-bg-color: #070707;
+  --default-box-color: #161618;
+  --art-card-border: rgba(255, 255, 255, 0.08);
+  --default-border: rgba(255, 255, 255, 0.1);
+  --art-hover-color: #252530;
+  --art-active-color: #202226;
+  --art-el-active-color: #2e2e38;
+
+  --art-card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3),
+    0 1px 2px -1px rgba(0, 0, 0, 0.4);
+  --art-card-shadow-hover: 0 4px 12px 0 rgba(0, 0, 0, 0.45),
+    0 2px 6px -2px rgba(0, 0, 0, 0.5);
+
+  --el-color-primary: #5d87ff;
+  --el-color-primary-light-3: #4867c2;
+  --el-color-primary-light-5: #3a5399;
+  --el-color-primary-light-7: #2c3f70;
+  --el-color-primary-light-8: #25355c;
+  --el-color-primary-light-9: #1e2b47;
+  --el-color-primary-dark-2: #7da0ff;
+
+  --el-color-success: #13deb9;
+  --el-color-success-light-3: #11ab8f;
+  --el-color-success-light-5: #0f8873;
+  --el-color-success-light-7: #0c6557;
+  --el-color-success-light-8: #0b5449;
+  --el-color-success-light-9: #09433b;
+  --el-color-success-dark-2: #42e5c7;
+
+  --el-color-warning: #ffae1f;
+  --el-color-warning-light-3: #c2861c;
+  --el-color-warning-light-5: #996b1b;
+  --el-color-warning-light-7: #705019;
+  --el-color-warning-light-8: #5c4318;
+  --el-color-warning-light-9: #473617;
+  --el-color-warning-dark-2: #ffbe4c;
+
+  --el-color-danger: #fa896b;
+  --el-color-danger-light-3: #c26d56;
+  --el-color-danger-light-5: #995847;
+  --el-color-danger-light-7: #704238;
+  --el-color-danger-light-8: #5c3730;
+  --el-color-danger-light-9: #472c28;
+  --el-color-danger-dark-2: #fba189;
+
+  --el-color-error: #fa896b;
+  --el-color-error-light-3: #c26d56;
+  --el-color-error-light-5: #995847;
+  --el-color-error-light-7: #704238;
+  --el-color-error-light-8: #5c3730;
+  --el-color-error-light-9: #472c28;
+  --el-color-error-dark-2: #fba189;
+
+  --el-color-info: #8f8fa3;
+  --el-color-info-light-3: #707082;
+  --el-color-info-light-5: #5a5a6a;
+  --el-color-info-light-7: #434352;
+  --el-color-info-light-8: #383846;
+  --el-color-info-light-9: #2d2d3a;
+  --el-color-info-dark-2: #a5a5b5;
+
+  --el-text-color-primary: #e3e3e8;
+  --el-text-color-regular: #c7c7d1;
+  --el-text-color-secondary: #8f8fa3;
+  --el-text-color-placeholder: #73738c;
+  --el-text-color-disabled: #505062;
+  --el-border-color: #505062;
+  --el-border-color-light: #393946;
+  --el-border-color-lighter: #393946;
+  --el-border-color-extra-light: #2a2a33;
+  --el-border-color-dark: #5c5c70;
+  --el-fill-color: #2a2a33;
+  --el-fill-color-light: #202226;
+  --el-fill-color-lighter: #1a1a1f;
+  --el-fill-color-blank: #161618;
+  --el-fill-color-dark: #30303a;
+  --el-bg-color: #161618;
+  --el-bg-color-page: #070707;
+  --el-bg-color-overlay: #1d1d21;
+  --el-mask-color: rgba(0, 0, 0, 0.65);
+  --el-disabled-bg-color: #1a1a1f;
+  --el-disabled-text-color: #505062;
+  --el-disabled-border-color: #393946;
+}
+
+/* ---- 全局基底 ---- */
+html, body {
+  background-color: var(--default-bg-color);
+  color: var(--art-gray-900);
+  font-family: var(--el-font-family);
+  -webkit-font-smoothing: antialiased;
+}
+
+html.dark body { color-scheme: dark; }
+
+/* 主题切换平滑过渡 */
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition: background-color 0.25s ease, border-color 0.25s ease,
+    color 0.15s ease !important;
+}
+
+/* ---- art 卡片体系 ---- */
+.art-card {
+  background: var(--default-box-color);
+  border: 1px solid var(--art-card-border);
+  border-radius: var(--art-radius-card);
+  box-shadow: var(--art-card-shadow);
+  transition: box-shadow 0.25s ease, border-color 0.25s ease,
+    transform 0.25s ease;
+}
+.art-card-sm { border-radius: var(--art-radius-card-sm); }
+.art-card-xs { border-radius: var(--art-radius-card-xs); }
+.art-card-hover:hover {
+  box-shadow: var(--art-card-shadow-hover);
+  transform: translateY(-2px);
+}
+
+/* 页面内容容器 */
+.art-page { padding: 16px; }
+
+/* 页面标题区 */
+.art-page-header { margin-bottom: 16px; }
+.art-page-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--art-gray-900);
+  line-height: 1.4;
+}
+.art-page-sub {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--art-gray-600);
+}
+
+/* 指标卡（看板） */
+.art-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px;
+}
+.art-stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--art-radius-card-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.art-stat-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--art-gray-900);
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+.art-stat-label {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--art-gray-600);
+}/* ---- Element Plus 组件风格微调（art 风） ---- */
+.el-card {
+  border: 1px solid var(--art-card-border);
+  border-radius: var(--art-radius-card);
+  box-shadow: var(--art-card-shadow) !important;
+  background: var(--default-box-color);
+  --el-card-padding: 20px;
+}
+.el-card__header {
+  border-bottom: 1px solid var(--default-border);
+  font-weight: 600;
+  color: var(--art-gray-800);
+}
+
+.el-table {
+  --el-table-border-color: var(--default-border);
+  --el-table-header-bg-color: var(--art-gray-100);
+  --el-table-header-text-color: var(--art-gray-700);
+  --el-table-text-color: var(--art-gray-800);
+  --el-table-row-hover-bg-color: var(--art-hover-color);
+  border-radius: var(--art-radius-table);
+}
+.el-table th.el-table__cell { font-weight: 600; }
+
+.el-button {
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.el-button--primary { --el-button-hover-bg-color: #7398ff; --el-button-hover-border-color: #7398ff; }
+
+.el-tag { border-radius: var(--art-radius-card-xs); font-weight: 500; }
+
+.el-dialog { border-radius: var(--art-radius-card); }
+.el-message-box { border-radius: var(--art-radius-card); }
+.el-popper.is-light { border-radius: calc(var(--custom-radius) / 3 + 4px); }
+.el-dropdown-menu { padding: 6px; }
+.el-dropdown-menu__item { border-radius: calc(var(--custom-radius) / 3 + 2px); }
+.el-dropdown-menu__item:not(.is-disabled):hover {
+  background: var(--art-hover-color);
+  color: var(--art-gray-900);
+}
+
+.el-input__wrapper { border-radius: calc(var(--custom-radius) / 3 + 2px); }
+.el-pagination.is-background .el-pager li {
+  border-radius: calc(var(--custom-radius) / 3 + 2px);
+}
+
+/* 徽章呼吸动画（art 风红点） */
+@keyframes art-breathe {
+  0% { box-shadow: 0 0 0 0 rgba(255, 56, 96, 0.5); }
+  70% { box-shadow: 0 0 0 6px rgba(255, 56, 96, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 56, 96, 0); }
+}
+.art-badge-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff3860;
+  animation: art-breathe 1.5s infinite;
+}
+
+/* ---- 页面路由过渡：slide-left（art 默认） ---- */
+.slide-left-enter-active,
+.slide-left-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.slide-left-enter-from { opacity: 0; transform: translateX(24px); }
+.slide-left-leave-to { opacity: 0; transform: translateX(-24px); }
+
+/* ---- 移动端全局适配 ---- */
+@media (max-width: 1180px) {
+  * { -webkit-tap-highlight-color: transparent; }
+}
+@media (max-width: 640px) {
+  .art-page { padding: 12px 12px 76px; } /* 底部 TabBar 预留 */
+  .art-page-title { font-size: 18px; }
+  .el-card { --el-card-padding: 14px; border-radius: var(--art-radius-card-sm); }
+  .el-dialog { width: calc(100vw - 24px) !important; margin: 8vh auto !important; }
+  .el-message-box { width: calc(100vw - 48px) !important; }
+  .el-table { font-size: 12px; }
+  .el-pagination { flex-wrap: wrap; justify-content: center; row-gap: 8px; }
+  /* 表单查询区在手机上纵向堆叠 */
+  .art-filter-bar .el-form--inline .el-form-item {
+    display: flex;
+    margin-right: 0;
+    width: 100%;
+  }
+  .art-filter-bar .el-form--inline .el-form-item__content { flex: 1; }
+  .art-filter-bar .el-input,
+  .art-filter-bar .el-select { width: 100% !important; }
+}
+
+/* 滚动条（art 风细滚动条） */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb {
+  background: var(--art-gray-400);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--art-gray-500); }
+::-webkit-scrollbar-track { background: transparent; }

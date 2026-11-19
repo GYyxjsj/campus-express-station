@@ -1,0 +1,23 @@
+总计 293 | 通过 293 | 失败 0 | 通过率 100.0%
+耗时 8.5s
+
+== 失败明细 ==
+
+== BUG探测 ==
+[G11] PASS [BUG探测]服务单ACCEPTED时物主自取应被拦截 | 实际:code=83004 msg=该包裹存在进行中的代取服务单，请先取消服务单后再本人取件 | 若code=0则包裹出库但服务单悬空→资金bug
+[S01] PASS [BUG探测]学生1保单无CLAIMED死状态 | 实际:0条CLAIMED滞留(样本) | settleExpired只查ACTIVE；CLAIMED为种子/扩容遗留死状态，全库数量见报告DB核查
+
+== 性能采样(ms) ==
+/api/parcels params={'page': 1, 'size': 20, 'sortKey': 'inboundTime'} 5.3ms total=3572
+/api/parcels params={'page': 100, 'size': 20} 7.1ms total=3572
+/api/parcels params={'page': 1, 'size': 20, 'keyword': 'SF'} 8.8ms total=441
+/api/admin/users params={'page': 1, 'size': 20} 27.1ms total=485
+/api/admin/logs params={'page': 1, 'size': 20} 2.4ms total=7333
+/api/admin/logs params={'page': 300, 'size': 20} 4.3ms total=7333
+/api/traces params={'page': 1, 'size': 20} 4.9ms total=11345
+/api/admin/wallet/transactions params={'page': 1, 'size': 20} 2.6ms total=3605
+/api/parcels params={'page': 1, 'size': 500} 5.5ms total=3572
+/api/stats/overview params=None 3.1ms total=None
+/api/stats/trend params={'days': 30} 3.0ms total=None
+/api/stats/distribution params=None 2.5ms total=None
+/api/stats/heatmap params={'weeks': 8} 3.9ms total=None
