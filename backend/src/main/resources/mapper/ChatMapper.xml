@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.express.mapper.ChatMapper">
+
+    <insert id="insert">
+        INSERT INTO chat_message (sender_id, receiver_id, content)
+        VALUES (#{senderId}, #{receiverId}, #{content})
+    </insert>
+
+    <!-- 会话列表：好友 + 最近一条消息 + 未读数，按最近消息时间排序 -->
+    <select id="selectConversations" resultType="map">
+        SELECT u.id AS "peerId", u.username AS "username", u.real_name AS "realName",
+               u.status AS "status", f.remark AS "remark",
+               lm.content AS "lastContent", lm.created_at AS "lastTime",
+               (lm.sender_id = #{userId}) AS "lastMine",
+               COALESCE(ur.cnt, 0) AS "unread"
+        FROM friendship f
+        JOIN sys_user u ON u.id = CASE WHEN f.user_id = #{userId} THEN f.friend_id ELSE f.user_id END
+        LEFT JOIN LATERAL (
+            SELECT m.content, m.created_at, m.sender_id FROM chat_message m
+            WHERE (m.sender_id = #{userId} AND m.receiver_id = u.id)
+               OR (m.sender_id = u.id AND m.receiver_id = #{userId})
+            ORDER BY m.created_at DESC, m.id DESC LIMIT 1
+        ) lm ON true
+        LEFT JOIN LATERAL (
+            SELECT count(*) AS cnt FROM chat_message m
+            WHERE m.sender_id = u.id AND m.receiver_id = #{userId} AND m.read_at IS NULL
+        ) ur ON true
+        WHERE (f.user_id = #{userId} OR f.friend_id = #{userId}) AND f.status = 'ACCEPTED'
+        ORDER BY lm.created_at DESC NULLS LAST, u.real_name
+    </select>
+
+    <select id="selectMessages" resultType="map">
+        SELECT * FROM (
+            SELECT m.id AS "id", m.sender_id AS "senderId", m.receiver_id AS "receiverId",
+                   m.content AS "content", m.read_at AS "readAt", m.created_at AS "createdAt"
+            FROM chat_message m
+            WHERE (m.sender_id = #{me} AND m.receiver_id = #{peer})
+               OR (m.sender_id = #{peer} AND m.receiver_id = #{me})
+            ORDER BY m.created_at DESC, m.id DESC
+            LIMIT #{limit}
+        ) t ORDER BY t."createdAt", t."id"
+    </select>
+
+    <update id="markRead">
+        UPDATE chat_message SET read_at = now()
+        WHERE receiver_id = #{me} AND sender_id = #{peer} AND read_at IS NULL
+    </update>
+
+    <select id="countUnread" resultType="long">
+        SELECT count(*) FROM chat_message WHERE receiver_id = #{userId} AND read_at IS NULL
+    </select>
+</mapper>

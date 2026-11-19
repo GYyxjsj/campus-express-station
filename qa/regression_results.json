@@ -1,0 +1,2783 @@
+{
+ "base": "http://127.0.0.1:8080/campus-express",
+ "started": "2026-11-18 22:47:22",
+ "duration_sec": 8.5,
+ "total": 293,
+ "passed": 293,
+ "failed": 0,
+ "pass_rate": 100.0,
+ "perf": [
+  {
+   "endpoint": "/api/parcels",
+   "params": {
+    "page": 1,
+    "size": 20,
+    "sortKey": "inboundTime"
+   },
+   "ms": 5.3,
+   "total": 3572
+  },
+  {
+   "endpoint": "/api/parcels",
+   "params": {
+    "page": 100,
+    "size": 20
+   },
+   "ms": 7.1,
+   "total": 3572
+  },
+  {
+   "endpoint": "/api/parcels",
+   "params": {
+    "page": 1,
+    "size": 20,
+    "keyword": "SF"
+   },
+   "ms": 8.8,
+   "total": 441
+  },
+  {
+   "endpoint": "/api/admin/users",
+   "params": {
+    "page": 1,
+    "size": 20
+   },
+   "ms": 27.1,
+   "total": 485
+  },
+  {
+   "endpoint": "/api/admin/logs",
+   "params": {
+    "page": 1,
+    "size": 20
+   },
+   "ms": 2.4,
+   "total": 7333
+  },
+  {
+   "endpoint": "/api/admin/logs",
+   "params": {
+    "page": 300,
+    "size": 20
+   },
+   "ms": 4.3,
+   "total": 7333
+  },
+  {
+   "endpoint": "/api/traces",
+   "params": {
+    "page": 1,
+    "size": 20
+   },
+   "ms": 4.9,
+   "total": 11345
+  },
+  {
+   "endpoint": "/api/admin/wallet/transactions",
+   "params": {
+    "page": 1,
+    "size": 20
+   },
+   "ms": 2.6,
+   "total": 3605
+  },
+  {
+   "endpoint": "/api/parcels",
+   "params": {
+    "page": 1,
+    "size": 500
+   },
+   "ms": 5.5,
+   "total": 3572
+  },
+  {
+   "endpoint": "/api/stats/overview",
+   "params": null,
+   "ms": 3.1,
+   "total": null
+  },
+  {
+   "endpoint": "/api/stats/trend",
+   "params": {
+    "days": 30
+   },
+   "ms": 3.0,
+   "total": null
+  },
+  {
+   "endpoint": "/api/stats/distribution",
+   "params": null,
+   "ms": 2.5,
+   "total": null
+  },
+  {
+   "endpoint": "/api/stats/heatmap",
+   "params": {
+    "weeks": 8
+   },
+   "ms": 3.9,
+   "total": null
+  }
+ ],
+ "bug_probes": [
+  {
+   "id": "G11",
+   "name": "[BUG探测]服务单ACCEPTED时物主自取应被拦截",
+   "pass": true,
+   "expect": "非0(拦截)",
+   "actual": "code=83004 msg=该包裹存在进行中的代取服务单，请先取消服务单后再本人取件",
+   "ms": 3.4,
+   "note": "若code=0则包裹出库但服务单悬空→资金bug"
+  },
+  {
+   "id": "S01",
+   "name": "[BUG探测]学生1保单无CLAIMED死状态",
+   "pass": true,
+   "expect": "0条",
+   "actual": "0条CLAIMED滞留(样本)",
+   "ms": 0,
+   "note": "settleExpired只查ACTIVE；CLAIMED为种子/扩容遗留死状态，全库数量见报告DB核查"
+  }
+ ],
+ "failures": [],
+ "results": [
+  {
+   "id": "A01",
+   "name": "健康检查",
+   "pass": true,
+   "expect": "code=0+断言",
+   "actual": "code=0 msg=ok status=UP",
+   "ms": 2.8,
+   "note": ""
+  },
+  {
+   "id": "A02-admin",
+   "name": "登录 admin",
+   "pass": true,
+   "expect": "code=0+断言",
+   "actual": "code=0 msg=ok token已签发",
+   "ms": 45.1,
+   "note": ""
+  },
+  {
+   "id": "A02-staff",
+   "name": "登录 staff01",
+   "pass": true,
+   "expect": "code=0+断言",
+   "actual": "code=0 msg=ok token已签发",
+   "ms": 44.9,
+   "note": ""
+  },
+  {
+   "id": "A02-stu1",
+   "name": "登录 20230101",
+   "pass": true,
+   "expect": "code=0+断言",
+   "actual": "code=0 msg=ok token已签发",
+   "ms": 44.6,
+   "note": ""
+  },
+  {
+   "id": "A02-stu2",
+   "name": "登录 20230102",
+   "pass": true,
+   "expect": "code=0+断言",
+   "actual": "code=0 msg=ok token已签发",
+   "ms": 44.3,
+   "note": ""
+  },
+  {
+   "id": "A03",
+   "name": "错误密码拒绝",
+   "pass": true,
+   "expect": "code=50001",
+   "actual": "code=50001 msg=用户名或密码错误",
+   "ms": 43.8,
+   "note": ""
+  },
+  {
+   "id": "A04",
+   "name": "不存在用户拒绝(统一提示)",
+   "pass": true,
+   "expect": "code=50001",
+   "actual": "code=50001 msg=用户名或密码错误",
+   "ms": 2.0,
+   "note": ""
+  },
+  {
+   "id": "A05",
+   "name": "无token访问受保护接口→HTTP401",
+   "pass": true,
+   "expect": "HTTP401/code40100",
+   "actual": "HTTP401/code40100",
+   "ms": 1.2,
+   "note": ""
+  },
+  {
+   "id": "A06",
+   "name": "伪造token→401",
+   "pass": true,
+   "expect": "HTTP401",
+   "actual": "HTTP401/code40100",
+   "ms": 1.2,
+   "note": ""
+  },
+  {
+   "id": "A07",
+   "name": "当前用户信息(me)",
+   "pass": true,
+   "expect": "code=0+断言",
+   "actual": "code=0 msg=ok username正确",
+   "ms": 2.0,
+   "note": ""
+  },
+  {
+   "id": "A08",
+   "name": "关于我们",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.6,
+   "note": ""
+  },
+  {
+   "id": "A09",
+   "name": "广告位active",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.4,
+   "note": ""
+  },
+  {
+   "id": "Z01",
+   "name": "入库测试包裹 QA9501323410",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 5.6,
+   "note": ""
+  },
+  {
+   "id": "Z02",
+   "name": "入库测试包裹 QA9501323411",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 5.0,
+   "note": ""
+  },
+  {
+   "id": "Z03",
+   "name": "入库测试包裹 QA9501323412",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 5.0,
+   "note": ""
+  },
+  {
+   "id": "Z04",
+   "name": "入库测试包裹 QA9501323413",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 5.8,
+   "note": ""
+  },
+  {
+   "id": "Z05",
+   "name": "入库测试包裹 QA9501323414",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 5.1,
+   "note": ""
+  },
+  {
+   "id": "Z06",
+   "name": "入库测试包裹 QA9501323415",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 4.7,
+   "note": ""
+  },
+  {
+   "id": "Z07",
+   "name": "入库测试包裹 QA9501323420",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 5.6,
+   "note": ""
+  },
+  {
+   "id": "Z08",
+   "name": "入库测试包裹 QA9501323421",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 5.4,
+   "note": ""
+  },
+  {
+   "id": "Z09",
+   "name": "入库测试包裹 QA9501323422",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 5.9,
+   "note": ""
+  },
+  {
+   "id": "Z10",
+   "name": "入库测试包裹 QA9501323423",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 6.4,
+   "note": ""
+  },
+  {
+   "id": "Z11",
+   "name": "入库测试包裹 QA9501323424",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 5.8,
+   "note": ""
+  },
+  {
+   "id": "Z12",
+   "name": "入库测试包裹 QA9501323425",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 5.7,
+   "note": ""
+  },
+  {
+   "id": "B01",
+   "name": "我的包裹分页",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 3.2,
+   "note": ""
+  },
+  {
+   "id": "B02",
+   "name": "包裹列表(学生强制本人)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 3.2,
+   "note": ""
+  },
+  {
+   "id": "B03",
+   "name": "通知分页",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.5,
+   "note": ""
+  },
+  {
+   "id": "B04",
+   "name": "未读通知数",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.8,
+   "note": ""
+  },
+  {
+   "id": "B05",
+   "name": "钱包总览",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 3.1,
+   "note": ""
+  },
+  {
+   "id": "B06",
+   "name": "充值档位",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.1,
+   "note": ""
+  },
+  {
+   "id": "B07",
+   "name": "钱包流水",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.7,
+   "note": ""
+  },
+  {
+   "id": "B08",
+   "name": "充值订单",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.1,
+   "note": ""
+  },
+  {
+   "id": "B09",
+   "name": "代取规则",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.6,
+   "note": ""
+  },
+  {
+   "id": "B10",
+   "name": "代取大厅",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 3.7,
+   "note": ""
+  },
+  {
+   "id": "B11",
+   "name": "我发布的服务单",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 3.0,
+   "note": ""
+  },
+  {
+   "id": "B12",
+   "name": "我接的服务单",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 4.3,
+   "note": ""
+  },
+  {
+   "id": "B13",
+   "name": "我发出的授权",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.9,
+   "note": ""
+  },
+  {
+   "id": "B14",
+   "name": "我收到的授权",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.4,
+   "note": ""
+  },
+  {
+   "id": "B15",
+   "name": "身份条码状态",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.3,
+   "note": ""
+  },
+  {
+   "id": "B16",
+   "name": "保险方案",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.4,
+   "note": ""
+  },
+  {
+   "id": "B17",
+   "name": "我的保单",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.9,
+   "note": ""
+  },
+  {
+   "id": "B18",
+   "name": "自寄单列表",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.2,
+   "note": ""
+  },
+  {
+   "id": "B19",
+   "name": "运费试算1kg",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.4,
+   "note": ""
+  },
+  {
+   "id": "B20",
+   "name": "运费试算3.5kg偏远",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.8,
+   "note": ""
+  },
+  {
+   "id": "B21",
+   "name": "我的工单",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.0,
+   "note": ""
+  },
+  {
+   "id": "B22",
+   "name": "我的卡券",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.8,
+   "note": ""
+  },
+  {
+   "id": "B23",
+   "name": "好友列表",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.6,
+   "note": ""
+  },
+  {
+   "id": "B24",
+   "name": "好友申请",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.8,
+   "note": ""
+  },
+  {
+   "id": "B25",
+   "name": "聊天会话",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.9,
+   "note": ""
+  },
+  {
+   "id": "B26",
+   "name": "聊天未读",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.4,
+   "note": ""
+  },
+  {
+   "id": "B27",
+   "name": "地址簿",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.2,
+   "note": ""
+  },
+  {
+   "id": "B28",
+   "name": "收货偏好",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.3,
+   "note": ""
+  },
+  {
+   "id": "B29",
+   "name": "电话簿",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.3,
+   "note": ""
+  },
+  {
+   "id": "B30",
+   "name": "邀请信息",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.1,
+   "note": ""
+  },
+  {
+   "id": "B31",
+   "name": "邀请记录",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.1,
+   "note": ""
+  },
+  {
+   "id": "B32",
+   "name": "公告弹窗(学生)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.4,
+   "note": ""
+  },
+  {
+   "id": "B33",
+   "name": "协议列表",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.9,
+   "note": ""
+  },
+  {
+   "id": "B34",
+   "name": "待签协议",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.4,
+   "note": ""
+  },
+  {
+   "id": "B35",
+   "name": "我的签署",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.0,
+   "note": ""
+  },
+  {
+   "id": "B36",
+   "name": "我的反馈",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.7,
+   "note": ""
+  },
+  {
+   "id": "B37",
+   "name": "AI状态",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.5,
+   "note": ""
+  },
+  {
+   "id": "B38",
+   "name": "包裹详情(本人)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.3,
+   "note": ""
+  },
+  {
+   "id": "B39",
+   "name": "包裹去向时间线",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.6,
+   "note": ""
+  },
+  {
+   "id": "B40",
+   "name": "越权查看他人包裹详情",
+   "pass": true,
+   "expect": "code=40300",
+   "actual": "code=40300 msg=无权查看该包裹",
+   "ms": 1.6,
+   "note": "包裹属于 20230102"
+  },
+  {
+   "id": "C01",
+   "name": "包裹台账分页",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 5.0,
+   "note": ""
+  },
+  {
+   "id": "C02",
+   "name": "滞留包裹",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 4.1,
+   "note": ""
+  },
+  {
+   "id": "C03",
+   "name": "去向台账",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 5.1,
+   "note": ""
+  },
+  {
+   "id": "C04",
+   "name": "去向总览",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 15.9,
+   "note": ""
+  },
+  {
+   "id": "C05",
+   "name": "工单管理分页",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.8,
+   "note": ""
+  },
+  {
+   "id": "C06",
+   "name": "工单统计",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.8,
+   "note": ""
+  },
+  {
+   "id": "C07",
+   "name": "自寄单管理",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.5,
+   "note": ""
+  },
+  {
+   "id": "C08",
+   "name": "货架查询(指定驿站)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 5.4,
+   "note": ""
+  },
+  {
+   "id": "C09",
+   "name": "驿站列表",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.6,
+   "note": ""
+  },
+  {
+   "id": "C10",
+   "name": "公告列表(员工只读已发布)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.7,
+   "note": ""
+  },
+  {
+   "id": "C11",
+   "name": "用户搜索",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.0,
+   "note": ""
+  },
+  {
+   "id": "C12",
+   "name": "通知分页",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.6,
+   "note": ""
+  },
+  {
+   "id": "C13",
+   "name": "员工不弹公告popup",
+   "pass": true,
+   "expect": "code=0+断言",
+   "actual": "code=0 msg=ok notices=[]",
+   "ms": 1.0,
+   "note": ""
+  },
+  {
+   "id": "C14",
+   "name": "员工popup count=0",
+   "pass": true,
+   "expect": "count=0",
+   "actual": "data={'notices': [], 'count': 0}",
+   "ms": 0.9,
+   "note": ""
+  },
+  {
+   "id": "D01",
+   "name": "用户管理分页",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 3.3,
+   "note": ""
+  },
+  {
+   "id": "D02",
+   "name": "操作日志",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.1,
+   "note": ""
+  },
+  {
+   "id": "D03",
+   "name": "钱包账户",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.7,
+   "note": ""
+  },
+  {
+   "id": "D04",
+   "name": "钱包流水(全量)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.5,
+   "note": ""
+  },
+  {
+   "id": "D05",
+   "name": "充值订单(全量)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.7,
+   "note": ""
+  },
+  {
+   "id": "D06",
+   "name": "钱包总览",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 4.5,
+   "note": ""
+  },
+  {
+   "id": "D07",
+   "name": "代取服务单管理",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 7.3,
+   "note": ""
+  },
+  {
+   "id": "D08",
+   "name": "代取总览",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.9,
+   "note": ""
+  },
+  {
+   "id": "D09",
+   "name": "协议管理",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.4,
+   "note": ""
+  },
+  {
+   "id": "D10",
+   "name": "协议签署统计",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.6,
+   "note": ""
+  },
+  {
+   "id": "D11",
+   "name": "协议签署记录",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.7,
+   "note": ""
+  },
+  {
+   "id": "D12",
+   "name": "提醒策略配置",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.6,
+   "note": ""
+  },
+  {
+   "id": "D13",
+   "name": "AI/站点设置",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.6,
+   "note": ""
+  },
+  {
+   "id": "D14",
+   "name": "卡券模板",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.9,
+   "note": ""
+  },
+  {
+   "id": "D15",
+   "name": "兑换码列表",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.9,
+   "note": ""
+  },
+  {
+   "id": "D16",
+   "name": "广告位管理",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.6,
+   "note": ""
+  },
+  {
+   "id": "D17",
+   "name": "反馈管理",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.8,
+   "note": ""
+  },
+  {
+   "id": "P01",
+   "name": "包裹台账3536条·首页",
+   "pass": true,
+   "expect": "code=0 且 ≤2000ms",
+   "actual": "code=0 5.3ms total=3572",
+   "ms": 5.3,
+   "note": "大数据量分页性能"
+  },
+  {
+   "id": "P02",
+   "name": "包裹台账·深翻页",
+   "pass": true,
+   "expect": "code=0 且 ≤2000ms",
+   "actual": "code=0 7.1ms total=3572",
+   "ms": 7.1,
+   "note": "大数据量分页性能"
+  },
+  {
+   "id": "P03",
+   "name": "包裹台账·关键字ILIKE",
+   "pass": true,
+   "expect": "code=0 且 ≤2000ms",
+   "actual": "code=0 8.8ms total=441",
+   "ms": 8.8,
+   "note": "大数据量分页性能"
+  },
+  {
+   "id": "P04",
+   "name": "用户479人·首页",
+   "pass": true,
+   "expect": "code=0 且 ≤2000ms",
+   "actual": "code=0 27.1ms total=485",
+   "ms": 27.1,
+   "note": "大数据量分页性能"
+  },
+  {
+   "id": "P05",
+   "name": "日志6949条·首页",
+   "pass": true,
+   "expect": "code=0 且 ≤2000ms",
+   "actual": "code=0 2.4ms total=7333",
+   "ms": 2.4,
+   "note": "大数据量分页性能"
+  },
+  {
+   "id": "P06",
+   "name": "日志·深翻页",
+   "pass": true,
+   "expect": "code=0 且 ≤2000ms",
+   "actual": "code=0 4.3ms total=7333",
+   "ms": 4.3,
+   "note": "大数据量分页性能"
+  },
+  {
+   "id": "P07",
+   "name": "去向10416条·首页",
+   "pass": true,
+   "expect": "code=0 且 ≤2000ms",
+   "actual": "code=0 4.9ms total=11345",
+   "ms": 4.9,
+   "note": "大数据量分页性能"
+  },
+  {
+   "id": "P08",
+   "name": "钱包流水3396条",
+   "pass": true,
+   "expect": "code=0 且 ≤2000ms",
+   "actual": "code=0 2.6ms total=3605",
+   "ms": 2.6,
+   "note": "大数据量分页性能"
+  },
+  {
+   "id": "P09",
+   "name": "size上限钳制(size=500→100)",
+   "pass": true,
+   "expect": "code=0 且 ≤2000ms",
+   "actual": "code=0 5.5ms total=3572",
+   "ms": 5.5,
+   "note": "大数据量分页性能"
+  },
+  {
+   "id": "P10",
+   "name": "size=500实际返回≤100条",
+   "pass": true,
+   "expect": "records≤100",
+   "actual": "records=100",
+   "ms": 5.8,
+   "note": ""
+  },
+  {
+   "id": "P11",
+   "name": "统计总览",
+   "pass": true,
+   "expect": "code=0 且 ≤3000ms",
+   "actual": "code=0 3.1ms total=None",
+   "ms": 3.1,
+   "note": "大数据量分页性能"
+  },
+  {
+   "id": "P12",
+   "name": "趋势30天",
+   "pass": true,
+   "expect": "code=0 且 ≤3000ms",
+   "actual": "code=0 3.0ms total=None",
+   "ms": 3.0,
+   "note": "大数据量分页性能"
+  },
+  {
+   "id": "P13",
+   "name": "分布统计",
+   "pass": true,
+   "expect": "code=0 且 ≤3000ms",
+   "actual": "code=0 2.5ms total=None",
+   "ms": 2.5,
+   "note": "大数据量分页性能"
+  },
+  {
+   "id": "P14",
+   "name": "热力图8周",
+   "pass": true,
+   "expect": "code=0 且 ≤3000ms",
+   "actual": "code=0 3.9ms total=None",
+   "ms": 3.9,
+   "note": "大数据量分页性能"
+  },
+  {
+   "id": "E01",
+   "name": "学生→用户管理",
+   "pass": true,
+   "expect": "code=40300",
+   "actual": "code=40300 msg=无权限执行该操作: user:manage",
+   "ms": 1.4,
+   "note": ""
+  },
+  {
+   "id": "E02",
+   "name": "学生→操作日志",
+   "pass": true,
+   "expect": "code=40300",
+   "actual": "code=40300 msg=无权限执行该操作: log:view",
+   "ms": 1.2,
+   "note": ""
+  },
+  {
+   "id": "E03",
+   "name": "学生→钱包管理",
+   "pass": true,
+   "expect": "code=40300",
+   "actual": "code=40300 msg=无权限执行该操作: wallet:manage",
+   "ms": 1.4,
+   "note": ""
+  },
+  {
+   "id": "E04",
+   "name": "学生→统计看板",
+   "pass": true,
+   "expect": "code=40300",
+   "actual": "code=40300 msg=无权限执行该操作: stats:view",
+   "ms": 1.2,
+   "note": ""
+  },
+  {
+   "id": "E05",
+   "name": "学生→去向台账",
+   "pass": true,
+   "expect": "code=40300",
+   "actual": "code=40300 msg=无权限执行该操作: trace:manage",
+   "ms": 1.1,
+   "note": ""
+  },
+  {
+   "id": "E06",
+   "name": "学生→工单管理",
+   "pass": true,
+   "expect": "code=40300",
+   "actual": "code=40300 msg=无权限执行该操作: ticket:handle",
+   "ms": 1.0,
+   "note": ""
+  },
+  {
+   "id": "E07",
+   "name": "学生→自寄管理",
+   "pass": true,
+   "expect": "code=40300",
+   "actual": "code=40300 msg=无权限执行该操作: ship:manage",
+   "ms": 1.0,
+   "note": ""
+  },
+  {
+   "id": "E08",
+   "name": "学生→卡券模板",
+   "pass": true,
+   "expect": "code=40300",
+   "actual": "code=40300 msg=无权限执行该操作: coupon:manage",
+   "ms": 1.0,
+   "note": ""
+  },
+  {
+   "id": "E09",
+   "name": "学生→协议管理",
+   "pass": true,
+   "expect": "code=40300",
+   "actual": "code=40300 msg=无权限执行该操作: policy:manage",
+   "ms": 0.9,
+   "note": ""
+  },
+  {
+   "id": "E10",
+   "name": "学生→AI设置",
+   "pass": true,
+   "expect": "code=40300",
+   "actual": "code=40300 msg=无权限执行该操作: ai:config",
+   "ms": 0.9,
+   "note": ""
+  },
+  {
+   "id": "E11",
+   "name": "学生→包裹入库",
+   "pass": true,
+   "expect": "code=40300",
+   "actual": "code=40300 msg=无权限执行该操作: parcel:inbound",
+   "ms": 3.3,
+   "note": ""
+  },
+  {
+   "id": "E12",
+   "name": "学生→本人取件核销(员工权限)",
+   "pass": true,
+   "expect": "code=40300",
+   "actual": "code=40300 msg=无权限执行该操作: parcel:pickup",
+   "ms": 2.2,
+   "note": ""
+  },
+  {
+   "id": "E13",
+   "name": "员工→用户管理(无user:manage)",
+   "pass": true,
+   "expect": "code=40300",
+   "actual": "code=40300 msg=无权限执行该操作: user:manage",
+   "ms": 1.2,
+   "note": ""
+  },
+  {
+   "id": "E14",
+   "name": "员工→统计看板(无stats:view)",
+   "pass": true,
+   "expect": "code=40300",
+   "actual": "code=40300 msg=无权限执行该操作: stats:view",
+   "ms": 1.0,
+   "note": ""
+  },
+  {
+   "id": "E15",
+   "name": "sortKey注入→白名单兜底默认排序",
+   "pass": true,
+   "expect": "code=0+断言",
+   "actual": "code=0 msg=ok total=3572",
+   "ms": 5.2,
+   "note": ""
+  },
+  {
+   "id": "E16",
+   "name": "order注入→默认DESC",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 5.3,
+   "note": ""
+  },
+  {
+   "id": "E17",
+   "name": "keyword注入→ILIKE参数绑定无害",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 8.8,
+   "note": ""
+  },
+  {
+   "id": "E18",
+   "name": "注入keyword不返回全表",
+   "pass": true,
+   "expect": "total=0",
+   "actual": "total=0",
+   "ms": 8.5,
+   "note": ""
+  },
+  {
+   "id": "E19",
+   "name": "注入后系统仍健康",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.1,
+   "note": ""
+  },
+  {
+   "id": "E20",
+   "name": "入库缺必填→40001",
+   "pass": true,
+   "expect": "code=40001",
+   "actual": "code=40001 msg=courierCompany: 快递公司不能为空; trackingNo: 运单号不能为空; stationId: 请选择驿站; ownerPhone: 收件人手机号不能为空",
+   "ms": 1.6,
+   "note": ""
+  },
+  {
+   "id": "E21",
+   "name": "充值金额0→40001",
+   "pass": true,
+   "expect": "code=40001",
+   "actual": "code=40001 msg=amount: 充值金额必须大于 0",
+   "ms": 17.8,
+   "note": ""
+  },
+  {
+   "id": "E22",
+   "name": "充值超上限→81004",
+   "pass": true,
+   "expect": "code=81004",
+   "actual": "code=81004 msg=单笔充值金额需在 1 ~ 500 元之间",
+   "ms": 16.9,
+   "note": ""
+  },
+  {
+   "id": "E23",
+   "name": "非法支付渠道→40001",
+   "pass": true,
+   "expect": "code=40001",
+   "actual": "code=40001 msg=不支持的支付渠道",
+   "ms": 2.0,
+   "note": ""
+  },
+  {
+   "id": "E24",
+   "name": "服务费低于下限→83005",
+   "pass": true,
+   "expect": "code=83005",
+   "actual": "code=83005 msg=服务费需在 2 ~ 50 元之间",
+   "ms": 3.6,
+   "note": ""
+  },
+  {
+   "id": "E25",
+   "name": "AI提示词注入拦截→87801",
+   "pass": true,
+   "expect": "code=87801",
+   "actual": "code=87801 msg=检测到试图修改助手规则的内容，我只能回答快递驿站相关问题。",
+   "ms": 1.5,
+   "note": ""
+  },
+  {
+   "id": "E26",
+   "name": "AI越域问题拦截→87801",
+   "pass": true,
+   "expect": "code=87801",
+   "actual": "code=87801 msg=这个问题超出快递驿站服务范围。您可以问我取件、代取、自寄运费、保险、钱包或卡券相关问题。",
+   "ms": 1.2,
+   "note": ""
+  },
+  {
+   "id": "E27",
+   "name": "AI正常快递咨询可答",
+   "pass": true,
+   "expect": "code=0+断言",
+   "actual": "code=0 msg=ok 有应答",
+   "ms": 6876.2,
+   "note": ""
+  },
+  {
+   "id": "E28",
+   "name": "聊天给非好友→拒绝",
+   "pass": true,
+   "expect": "code=88002",
+   "actual": "code=88002 msg=你们还不是好友，先在「提醒与好友」添加对方",
+   "ms": 2.8,
+   "note": "3与4当前非好友(前置DB确认)"
+  },
+  {
+   "id": "E29",
+   "name": "兑换码不存在→87202",
+   "pass": true,
+   "expect": "code=87202",
+   "actual": "code=87202 msg=兑换码不存在，请核对后重试",
+   "ms": 3.3,
+   "note": ""
+  },
+  {
+   "id": "E30",
+   "name": "授权给自己→70003",
+   "pass": true,
+   "expect": "code=70003",
+   "actual": "code=70003 msg=不能授权给自己",
+   "ms": 3.1,
+   "note": ""
+  },
+  {
+   "id": "E31",
+   "name": "畸形JSON请求体→HTTP400/40001",
+   "pass": true,
+   "expect": "HTTP400/code40001",
+   "actual": "HTTP400/code40001",
+   "ms": 2.7,
+   "note": ""
+  },
+  {
+   "id": "F01",
+   "name": "学生1充值下单50元",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 28.9,
+   "note": ""
+  },
+  {
+   "id": "F02",
+   "name": "重复支付前取消验证-先支付",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 4.0,
+   "note": ""
+  },
+  {
+   "id": "F03",
+   "name": "重复支付→81006",
+   "pass": true,
+   "expect": "code=81006",
+   "actual": "code=81006 msg=订单已支付、已取消或已超时，请重新下单",
+   "ms": 2.3,
+   "note": ""
+  },
+  {
+   "id": "F04",
+   "name": "充值下单10元(待取消)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.9,
+   "note": ""
+  },
+  {
+   "id": "F05",
+   "name": "取消待支付订单",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.6,
+   "note": ""
+  },
+  {
+   "id": "F06",
+   "name": "已取消订单再支付→81006",
+   "pass": true,
+   "expect": "code=81006",
+   "actual": "code=81006 msg=订单已支付、已取消或已超时，请重新下单",
+   "ms": 3.0,
+   "note": ""
+  },
+  {
+   "id": "F07",
+   "name": "支付他人订单→81005",
+   "pass": true,
+   "expect": "code=81005",
+   "actual": "code=81005 msg=充值订单不存在",
+   "ms": 2.2,
+   "note": ""
+  },
+  {
+   "id": "F08",
+   "name": "学生2充值下单100元",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 3.1,
+   "note": ""
+  },
+  {
+   "id": "F09",
+   "name": "学生2支付到账",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 4.7,
+   "note": ""
+  },
+  {
+   "id": "F10",
+   "name": "充值后余额核对",
+   "pass": true,
+   "expect": "code=0+断言",
+   "actual": "code=0 msg=ok 余额=1123.4",
+   "ms": 2.9,
+   "note": ""
+  },
+  {
+   "id": "G01",
+   "name": "学生1发布服务单(fee=5 tip=1)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 5.5,
+   "note": ""
+  },
+  {
+   "id": "G02",
+   "name": "发布后托管扣款6元",
+   "pass": true,
+   "expect": "1123.4-6",
+   "actual": "1117.4",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "G03",
+   "name": "同包裹重复发单→83004",
+   "pass": true,
+   "expect": "code=83004",
+   "actual": "code=83004 msg=该包裹已有进行中的代取服务单",
+   "ms": 2.8,
+   "note": ""
+  },
+  {
+   "id": "G04",
+   "name": "自己接自己的单→83003",
+   "pass": true,
+   "expect": "code=83003",
+   "actual": "code=83003 msg=不能接自己发布的服务单",
+   "ms": 1.9,
+   "note": ""
+  },
+  {
+   "id": "G05",
+   "name": "有服务单时再发授权→83004拦截",
+   "pass": true,
+   "expect": "code=83004",
+   "actual": "code=83004 msg=该包裹已有进行中的代取服务单，请先完成或取消",
+   "ms": 2.4,
+   "note": "修复后：ProxyAuthService.create增加active服务单守卫"
+  },
+  {
+   "id": "G06",
+   "name": "学生2接单(自动生成授权)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 4.4,
+   "note": ""
+  },
+  {
+   "id": "G07",
+   "name": "接单返回授权码",
+   "pass": true,
+   "expect": "authCode非空",
+   "actual": "HZAFGV2Q",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "G08",
+   "name": "大厅列表脱敏(无取件码/授权码)",
+   "pass": true,
+   "expect": "全部为null",
+   "actual": "泄露0条",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "G09",
+   "name": "接单人查看详情含取件码",
+   "pass": true,
+   "expect": "code=0+断言",
+   "actual": "code=0 msg=ok pickupCode可见",
+   "ms": 1.5,
+   "note": ""
+  },
+  {
+   "id": "G10",
+   "name": "发布人查看详情可见但取件码脱敏",
+   "pass": true,
+   "expect": "code=0+断言",
+   "actual": "code=0 msg=ok 发布人不可见pickupCode",
+   "ms": 1.5,
+   "note": ""
+  },
+  {
+   "id": "G11",
+   "name": "[BUG探测]服务单ACCEPTED时物主自取应被拦截",
+   "pass": true,
+   "expect": "非0(拦截)",
+   "actual": "code=83004 msg=该包裹存在进行中的代取服务单，请先取消服务单后再本人取件",
+   "ms": 3.4,
+   "note": "若code=0则包裹出库但服务单悬空→资金bug"
+  },
+  {
+   "id": "G12",
+   "name": "错误取件码核销→70005",
+   "pass": true,
+   "expect": "code=70005",
+   "actual": "code=70005 msg=取件码与授权包裹不匹配",
+   "ms": 2.5,
+   "note": ""
+  },
+  {
+   "id": "G13",
+   "name": "柜台代取核销成功",
+   "pass": true,
+   "expect": "code=0+断言",
+   "actual": "code=0 msg=ok PROXY出库",
+   "ms": 5.0,
+   "note": ""
+  },
+  {
+   "id": "G14",
+   "name": "核销联动服务单→PICKED",
+   "pass": true,
+   "expect": "PICKED",
+   "actual": "PICKED",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "G15",
+   "name": "授权已用再次核销→70002",
+   "pass": true,
+   "expect": "code=70002",
+   "actual": "code=70002 msg=授权已失效（已使用/已撤销/已过期）",
+   "ms": 2.5,
+   "note": ""
+  },
+  {
+   "id": "G16",
+   "name": "跑腿员标记送达",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 3.3,
+   "note": ""
+  },
+  {
+   "id": "G17",
+   "name": "已取出后发布人自行取消→83002",
+   "pass": true,
+   "expect": "code=83002",
+   "actual": "code=83002 msg=包裹已取出，无法自行取消，请联系驿站管理员处理",
+   "ms": 3.6,
+   "note": ""
+  },
+  {
+   "id": "G18",
+   "name": "发布人确认完成",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 4.2,
+   "note": ""
+  },
+  {
+   "id": "G19",
+   "name": "跑腿员入账5.40元(6-10%抽成)",
+   "pass": true,
+   "expect": "1130.7+5.4",
+   "actual": "1136.1",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "G20",
+   "name": "发布人评价5星",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.4,
+   "note": ""
+  },
+  {
+   "id": "G21",
+   "name": "重复评价→83007",
+   "pass": true,
+   "expect": "code=83007",
+   "actual": "code=83007 msg=该服务单已评价",
+   "ms": 2.5,
+   "note": ""
+  },
+  {
+   "id": "G22",
+   "name": "非发布人评价→40300",
+   "pass": true,
+   "expect": "code=40300",
+   "actual": "code=40300 msg=仅发布人可评价",
+   "ms": 3.0,
+   "note": ""
+  },
+  {
+   "id": "G23",
+   "name": "包裹终态PICKED_UP",
+   "pass": true,
+   "expect": "PICKED_UP",
+   "actual": "PICKED_UP",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "H01",
+   "name": "发布服务单(fee=3)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 4.9,
+   "note": ""
+  },
+  {
+   "id": "H02",
+   "name": "接单人取消(OPEN→ACCEPTED后)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 4.6,
+   "note": ""
+  },
+  {
+   "id": "H03",
+   "name": "跑腿员取消ACCEPTED单",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 4.9,
+   "note": ""
+  },
+  {
+   "id": "H04",
+   "name": "取消后全额退款3元",
+   "pass": true,
+   "expect": "1117.4",
+   "actual": "1117.4",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "H05",
+   "name": "取消后自动授权同步撤销",
+   "pass": true,
+   "expect": "无ACTIVE授权",
+   "actual": "残留0条",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "H06",
+   "name": "再发一单供管理员关闭",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 5.4,
+   "note": ""
+  },
+  {
+   "id": "H07",
+   "name": "管理员强制关闭退款",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 4.0,
+   "note": ""
+  },
+  {
+   "id": "H08",
+   "name": "强关后余额复原",
+   "pass": true,
+   "expect": "1117.4",
+   "actual": "1117.4",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "I01",
+   "name": "学生1生成身份码",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.9,
+   "note": ""
+  },
+  {
+   "id": "I02",
+   "name": "身份码格式CE+10位数字",
+   "pass": true,
+   "expect": "CE+10位数字",
+   "actual": "CE6358428065",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "I03",
+   "name": "员工核验身份码",
+   "pass": true,
+   "expect": "code=0+断言",
+   "actual": "code=0 msg=ok 归属学生1",
+   "ms": 5.8,
+   "note": ""
+  },
+  {
+   "id": "I04",
+   "name": "错误身份码→82001",
+   "pass": true,
+   "expect": "code=82001",
+   "actual": "code=82001 msg=条码不存在，请确认学生出示的是本系统条码",
+   "ms": 2.8,
+   "note": ""
+  },
+  {
+   "id": "I05",
+   "name": "身份码柜台取件(免取件码)",
+   "pass": true,
+   "expect": "code=0+断言",
+   "actual": "code=0 msg=ok IDENTITY出库",
+   "ms": 5.3,
+   "note": ""
+  },
+  {
+   "id": "I06",
+   "name": "已出库重复取件→60005",
+   "pass": true,
+   "expect": "code=60005",
+   "actual": "code=60005 msg=包裹已出库，无法重复核销",
+   "ms": 3.3,
+   "note": ""
+  },
+  {
+   "id": "I07",
+   "name": "学生自己调核验接口→40300",
+   "pass": true,
+   "expect": "code=40300",
+   "actual": "code=40300 msg=无权限执行该操作: identity:verify",
+   "ms": 1.8,
+   "note": ""
+  },
+  {
+   "id": "J01",
+   "name": "创建自寄单(SF 2kg)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 5.0,
+   "note": ""
+  },
+  {
+   "id": "J02",
+   "name": "运费即时扣款",
+   "pass": true,
+   "expect": "1117.4-10.0",
+   "actual": "1107.4",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "J03",
+   "name": "非法快递公司→40001",
+   "pass": true,
+   "expect": "code=40001",
+   "actual": "code=40001 msg=请选择支持的快递公司",
+   "ms": 3.0,
+   "note": ""
+  },
+  {
+   "id": "J04",
+   "name": "学生投递到站(DROPPED)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 3.4,
+   "note": ""
+  },
+  {
+   "id": "J05",
+   "name": "员工揽收回填运单号",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 3.5,
+   "note": ""
+  },
+  {
+   "id": "J06",
+   "name": "终态SHIPPED且有运单号",
+   "pass": true,
+   "expect": "SHIPPED+trackingNo",
+   "actual": "SHIPPED/SF1795013242",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "J07",
+   "name": "已寄出取消→87402",
+   "pass": true,
+   "expect": "code=87402",
+   "actual": "code=87402 msg=已寄出或已取消的自寄单无法取消",
+   "ms": 2.9,
+   "note": ""
+  },
+  {
+   "id": "J08",
+   "name": "第二单(ZT 1kg)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 5.6,
+   "note": ""
+  },
+  {
+   "id": "J09",
+   "name": "CREATED状态取消",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 3.7,
+   "note": ""
+  },
+  {
+   "id": "J10",
+   "name": "取消后运费退回",
+   "pass": true,
+   "expect": "余额+运费",
+   "actual": "1107.4",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "K01",
+   "name": "学生提交工单(PARCEL)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 8.2,
+   "note": ""
+  },
+  {
+   "id": "K02",
+   "name": "非法类别→40001",
+   "pass": true,
+   "expect": "code=40001",
+   "actual": "code=40001 msg=请选择工单类别",
+   "ms": 2.3,
+   "note": ""
+  },
+  {
+   "id": "K03",
+   "name": "员工标记处理中",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 3.1,
+   "note": ""
+  },
+  {
+   "id": "K04",
+   "name": "员工回复",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.8,
+   "note": ""
+  },
+  {
+   "id": "K05",
+   "name": "学生再提交一单(供主动关闭)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 9.0,
+   "note": ""
+  },
+  {
+   "id": "K06",
+   "name": "学生主动关闭PROCESSING前工单",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.8,
+   "note": ""
+  },
+  {
+   "id": "K07",
+   "name": "已关闭工单重复关闭→87602",
+   "pass": true,
+   "expect": "code=87602",
+   "actual": "code=87602 msg=工单不存在或已完成",
+   "ms": 2.2,
+   "note": ""
+  },
+  {
+   "id": "K08",
+   "name": "员工办结(含处理结果)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.9,
+   "note": ""
+  },
+  {
+   "id": "K09",
+   "name": "工单状态DONE且含回复",
+   "pass": true,
+   "expect": "DONE+回复≥2",
+   "actual": "DONE/replies=2",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "K10",
+   "name": "DONE后学生关闭→87602",
+   "pass": true,
+   "expect": "code=87602",
+   "actual": "code=87602 msg=工单不存在或已完成",
+   "ms": 2.1,
+   "note": ""
+  },
+  {
+   "id": "K11",
+   "name": "DONE后学生追加回复→87602",
+   "pass": true,
+   "expect": "code=87602",
+   "actual": "code=87602 msg=工单已处理完成，如需帮助请新建工单",
+   "ms": 3.1,
+   "note": ""
+  },
+  {
+   "id": "K12",
+   "name": "他人工单详情→拒绝或脱敏",
+   "pass": true,
+   "expect": "87601/40300",
+   "actual": "87601/工单不存在",
+   "ms": 1.3,
+   "note": ""
+  },
+  {
+   "id": "L01",
+   "name": "学生2为自己在库包裹投保",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 5.3,
+   "note": ""
+  },
+  {
+   "id": "L02",
+   "name": "保费1元扣款",
+   "pass": true,
+   "expect": "1136.1-1",
+   "actual": "1135.1",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "L03",
+   "name": "同包裹重复投保→87501",
+   "pass": true,
+   "expect": "code=87501",
+   "actual": "code=87501 msg=该包裹已投保，每单限投一次",
+   "ms": 2.5,
+   "note": ""
+  },
+  {
+   "id": "L04",
+   "name": "为他人包裹投保→87501",
+   "pass": true,
+   "expect": "code=87501",
+   "actual": "code=87501 msg=包裹不存在或不属于您",
+   "ms": 2.1,
+   "note": ""
+  },
+  {
+   "id": "L05",
+   "name": "我的保单列表含新单",
+   "pass": true,
+   "expect": "code=0+断言",
+   "actual": "code=0 msg=ok 包含3672",
+   "ms": 1.7,
+   "note": ""
+  },
+  {
+   "id": "M01",
+   "name": "管理员发券批次(2张5元券)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 3.1,
+   "note": ""
+  },
+  {
+   "id": "M02",
+   "name": "学生1兑换成功",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 4.5,
+   "note": ""
+  },
+  {
+   "id": "M03",
+   "name": "重复兑换→87202",
+   "pass": true,
+   "expect": "code=87202",
+   "actual": "code=87202 msg=兑换码已被使用或已停用",
+   "ms": 2.4,
+   "note": ""
+  },
+  {
+   "id": "M04",
+   "name": "伪造兑换码→87202",
+   "pass": true,
+   "expect": "code=87202",
+   "actual": "code=87202 msg=兑换码不存在，请核对后重试",
+   "ms": 2.5,
+   "note": ""
+  },
+  {
+   "id": "M05",
+   "name": "我的卡券含新券(REDEEM来源)",
+   "pass": true,
+   "expect": "code=0+断言",
+   "actual": "code=0 msg=ok 新券已入账",
+   "ms": 18.0,
+   "note": ""
+  },
+  {
+   "id": "M06",
+   "name": "学生调发券接口→40300",
+   "pass": true,
+   "expect": "code=40300",
+   "actual": "code=40300 msg=无权限执行该操作: coupon:manage",
+   "ms": 3.0,
+   "note": ""
+  },
+  {
+   "id": "M07",
+   "name": "金额越界201→40001",
+   "pass": true,
+   "expect": "code=40001",
+   "actual": "code=40001 msg=面值须在 0 ~ 200 元之间",
+   "ms": 2.1,
+   "note": "业务校验 40001：面值须在 0~200"
+  },
+  {
+   "id": "N01",
+   "name": "好友列表(初始)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.5,
+   "note": ""
+  },
+  {
+   "id": "N01B",
+   "name": "后台按学号搜索用户",
+   "pass": true,
+   "expect": "code=0+断言",
+   "actual": "code=0 msg=ok 命中20230102",
+   "ms": 2.1,
+   "note": ""
+  },
+  {
+   "id": "N02",
+   "name": "发送好友申请(keyword)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.7,
+   "note": ""
+  },
+  {
+   "id": "N02B",
+   "name": "重复申请→87002",
+   "pass": true,
+   "expect": "code=87002",
+   "actual": "code=87002 msg=你们已是好友或申请正在处理中",
+   "ms": 2.4,
+   "note": ""
+  },
+  {
+   "id": "N02C",
+   "name": "加自己→87001",
+   "pass": true,
+   "expect": "code=87001",
+   "actual": "code=87001 msg=不能添加自己为好友",
+   "ms": 2.6,
+   "note": ""
+  },
+  {
+   "id": "N02D",
+   "name": "不存在学号→87001",
+   "pass": true,
+   "expect": "code=87001",
+   "actual": "code=87001 msg=未找到该同学（需已注册且账号启用）",
+   "ms": 2.2,
+   "note": ""
+  },
+  {
+   "id": "N03",
+   "name": "学生2接受申请",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.2,
+   "note": ""
+  },
+  {
+   "id": "N04",
+   "name": "互发消息",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.3,
+   "note": ""
+  },
+  {
+   "id": "N05",
+   "name": "拉取聊天记录",
+   "pass": true,
+   "expect": "code=0+断言",
+   "actual": "code=0 msg=ok 有消息",
+   "ms": 2.1,
+   "note": ""
+  },
+  {
+   "id": "N06",
+   "name": "未读数接口(Long)",
+   "pass": true,
+   "expect": "code=0+断言",
+   "actual": "code=0 msg=ok unread=0",
+   "ms": 1.2,
+   "note": ""
+  },
+  {
+   "id": "N07",
+   "name": "拉取后未读清零",
+   "pass": true,
+   "expect": "code=0+断言",
+   "actual": "code=0 msg=ok unread=0",
+   "ms": 1.1,
+   "note": ""
+  },
+  {
+   "id": "N07B",
+   "name": "会话列表含对端",
+   "pass": true,
+   "expect": "code=0+断言",
+   "actual": "code=0 msg=ok 含学生1",
+   "ms": 1.6,
+   "note": ""
+  },
+  {
+   "id": "N08",
+   "name": "删除好友恢复现场",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 ok",
+   "ms": 200,
+   "note": ""
+  },
+  {
+   "id": "O01",
+   "name": "新增地址",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 3.1,
+   "note": ""
+  },
+  {
+   "id": "O02",
+   "name": "地址列表含新址且默认",
+   "pass": true,
+   "expect": "code=0+断言",
+   "actual": "code=0 msg=ok 默认生效",
+   "ms": 1.5,
+   "note": ""
+  },
+  {
+   "id": "O03",
+   "name": "修改地址",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.5,
+   "note": ""
+  },
+  {
+   "id": "O04",
+   "name": "他人改地址→87301脱敏",
+   "pass": true,
+   "expect": "code=87301",
+   "actual": "code=87301 msg=地址不存在或不属于您",
+   "ms": 2.4,
+   "note": "requireOwned按不存在脱敏返回87301"
+  },
+  {
+   "id": "O05",
+   "name": "删除地址",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.1,
+   "note": ""
+  },
+  {
+   "id": "O06",
+   "name": "读取收货偏好",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.4,
+   "note": ""
+  },
+  {
+   "id": "O07",
+   "name": "更新收货偏好",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 3.6,
+   "note": ""
+  },
+  {
+   "id": "O08",
+   "name": "偏好回读一致",
+   "pass": true,
+   "expect": "EVENING/PROXY",
+   "actual": "EVENING/PROXY",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "O09",
+   "name": "新增电话簿联系人",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 3.2,
+   "note": ""
+  },
+  {
+   "id": "O10",
+   "name": "删除联系人",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 1.6,
+   "note": ""
+  },
+  {
+   "id": "P15",
+   "name": "管理员发布公告(isPopup=1)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.3,
+   "note": ""
+  },
+  {
+   "id": "P16",
+   "name": "学生popup可见新公告",
+   "pass": true,
+   "expect": "包含新公告",
+   "actual": "count=3",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "P17",
+   "name": "员工端不弹公告",
+   "pass": true,
+   "expect": "空",
+   "actual": "[]",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "P18",
+   "name": "学生标记已读(dismiss)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.7,
+   "note": ""
+  },
+  {
+   "id": "P19",
+   "name": "dismiss后仍返回(不再弹由前端本地控制)",
+   "pass": true,
+   "expect": "仍含该公告",
+   "actual": "count=3",
+   "ms": 0,
+   "note": "notice_read仅留痕，popupWhere不过滤已读"
+  },
+  {
+   "id": "P20",
+   "name": "管理员更新公告(isPopup=0 下架)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.8,
+   "note": ""
+  },
+  {
+   "id": "P21",
+   "name": "下架后popup不再出现",
+   "pass": true,
+   "expect": "不含该公告",
+   "actual": "count=3",
+   "ms": 0,
+   "note": "产品无删除接口，下架(isPopup=0)等价"
+  },
+  {
+   "id": "Q01",
+   "name": "创建测试学生账号",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 45.2,
+   "note": ""
+  },
+  {
+   "id": "Q02",
+   "name": "停用账号",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.9,
+   "note": ""
+  },
+  {
+   "id": "Q03",
+   "name": "停用后登录→80002",
+   "pass": true,
+   "expect": "80002",
+   "actual": "80002 账号已停用，请联系管理员",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "Q04",
+   "name": "启用账号",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 3.9,
+   "note": ""
+  },
+  {
+   "id": "Q05",
+   "name": "重置密码",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 45.7,
+   "note": ""
+  },
+  {
+   "id": "Q06",
+   "name": "新密码可登录",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "0",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "Q07",
+   "name": "删除测试账号",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 4.1,
+   "note": ""
+  },
+  {
+   "id": "Q08",
+   "name": "重复用户名→50002",
+   "pass": true,
+   "expect": "code=50002",
+   "actual": "code=50002 msg=账号已存在",
+   "ms": 2.4,
+   "note": ""
+  },
+  {
+   "id": "Q09",
+   "name": "管理员调账+1",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 3.4,
+   "note": ""
+  },
+  {
+   "id": "Q10",
+   "name": "管理员调账-1复原",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 3.2,
+   "note": ""
+  },
+  {
+   "id": "Q11",
+   "name": "调账后余额复原",
+   "pass": true,
+   "expect": "1135.1",
+   "actual": "1135.1",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "Q12",
+   "name": "修改配置fee.min=3",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 3.5,
+   "note": ""
+  },
+  {
+   "id": "Q13",
+   "name": "低于新下限发单→83005",
+   "pass": true,
+   "expect": "code=83005",
+   "actual": "code=83005 msg=服务费需在 3 ~ 50 元之间",
+   "ms": 2.8,
+   "note": ""
+  },
+  {
+   "id": "Q14",
+   "name": "配置回写原值",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.3,
+   "note": ""
+  },
+  {
+   "id": "Q15",
+   "name": "新增站点",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.9,
+   "note": ""
+  },
+  {
+   "id": "Q16",
+   "name": "站点下新增货架(编码A-01-03)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.3,
+   "note": ""
+  },
+  {
+   "id": "Q17",
+   "name": "停用货架(status=0)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.3,
+   "note": ""
+  },
+  {
+   "id": "Q18",
+   "name": "更新站点(改名)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.2,
+   "note": ""
+  },
+  {
+   "id": "Q19",
+   "name": "新增广告",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.3,
+   "note": ""
+  },
+  {
+   "id": "Q20",
+   "name": "下线广告",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.7,
+   "note": ""
+  },
+  {
+   "id": "Q21",
+   "name": "删除广告",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 2.8,
+   "note": ""
+  },
+  {
+   "id": "Q22",
+   "name": "学生提交反馈(BUG)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 3.3,
+   "note": ""
+  },
+  {
+   "id": "Q23",
+   "name": "管理员回复反馈",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 3.3,
+   "note": ""
+  },
+  {
+   "id": "Q24",
+   "name": "学生可见官方回复",
+   "pass": true,
+   "expect": "reply非空",
+   "actual": "已收到，感谢反馈。",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "R01",
+   "name": "新用户注册(带邀请码)",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "0 ok",
+   "ms": 200,
+   "note": ""
+  },
+  {
+   "id": "R01B",
+   "name": "注册后登录",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "0",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "R02",
+   "name": "重复注册→50002",
+   "pass": true,
+   "expect": "code=50002",
+   "actual": "code=50002 msg=该学号已注册",
+   "ms": 2.1,
+   "note": ""
+  },
+  {
+   "id": "R03",
+   "name": "新用户充值20元",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 3.3,
+   "note": ""
+  },
+  {
+   "id": "R04",
+   "name": "支付到账",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 4.5,
+   "note": ""
+  },
+  {
+   "id": "R05",
+   "name": "邀请人获10%返利(+2元)",
+   "pass": true,
+   "expect": "1107.4+2",
+   "actual": "1109.4",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "R06",
+   "name": "新用户余额20元",
+   "pass": true,
+   "expect": "20",
+   "actual": "20.0",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "R06B",
+   "name": "邀请记录含新生且返利2元",
+   "pass": true,
+   "expect": "1条/amount=2",
+   "actual": "1条/2.0",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "R07A",
+   "name": "调账清零测试账号",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 3.9,
+   "note": ""
+  },
+  {
+   "id": "R07",
+   "name": "清理测试账号",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "code=0 msg=ok",
+   "ms": 3.3,
+   "note": ""
+  },
+  {
+   "id": "S01",
+   "name": "[BUG探测]学生1保单无CLAIMED死状态",
+   "pass": true,
+   "expect": "0条",
+   "actual": "0条CLAIMED滞留(样本)",
+   "ms": 0,
+   "note": "settleExpired只查ACTIVE；CLAIMED为种子/扩容遗留死状态，全库数量见报告DB核查"
+  },
+  {
+   "id": "S02",
+   "name": "托管中包裹退回应被拦截→83004",
+   "pass": true,
+   "expect": "83004",
+   "actual": "code=83004 该包裹存在进行中的代取服务单，请先取消服务单后再退回",
+   "ms": 2.7,
+   "note": "若放行则包裹离站、托管款悬空"
+  },
+  {
+   "id": "S03",
+   "name": "探测后余额复原",
+   "pass": true,
+   "expect": "1109.4",
+   "actual": "1109.4",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "S06",
+   "name": "已有授权时发服务单→70004拦截",
+   "pass": true,
+   "expect": "70004",
+   "actual": "code=70004 该包裹已有生效的代取授权，请先撤销授权再发布服务单",
+   "ms": 2.4,
+   "note": ""
+  },
+  {
+   "id": "S07",
+   "name": "身份码自取(OPEN单)放行",
+   "pass": true,
+   "expect": "code=0",
+   "actual": "0 ok",
+   "ms": 4.7,
+   "note": ""
+  },
+  {
+   "id": "S08",
+   "name": "OPEN服务单联动取消",
+   "pass": true,
+   "expect": "CANCELLED",
+   "actual": "CANCELLED",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "S09",
+   "name": "联动取消全额退款",
+   "pass": true,
+   "expect": "1106.4+3",
+   "actual": "1109.4",
+   "ms": 0,
+   "note": ""
+  }
+ ],
+ "ctx_flags": {}
+}

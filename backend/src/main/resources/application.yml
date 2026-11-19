@@ -1,0 +1,58 @@
+server:
+  port: 8080                      # 内嵌运行时的端口；外置 Tomcat 由 Tomcat 决定
+  servlet:
+    context-path: /campus-express
+    encoding:
+      charset: UTF-8
+      force: true
+
+spring:
+  application:
+    name: campus-express
+  datasource:
+    # 生产环境用环境变量覆盖；也可切换 JNDI（见部署指南）
+    url: ${DB_URL:jdbc:postgresql://127.0.0.1:5432/campus_express}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX:20}
+      minimum-idle: 5
+      connection-timeout: 10000
+      max-lifetime: 1800000
+  jackson:
+    time-zone: Asia/Shanghai
+    date-format: yyyy-MM-dd HH:mm:ss
+    default-property-inclusion: non_null
+  mvc:
+    # 路径未匹配时抛 NoHandlerFoundException，交给 GlobalExceptionHandler 返回统一 {code,msg} 体
+    throw-exception-if-no-handler-found: true
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.campus.express.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    default-statement-timeout: 15
+
+# 业务配置
+campus:
+  jwt:
+    # 生产必须通过环境变量 JWT_SECRET 覆盖（HS256，>=32字节）
+    secret: ${JWT_SECRET:campus-express-dev-secret-change-me-please-32bytes!}
+    expire-hours: 24
+  task:
+    # 多实例部署时仅一个实例开启定时任务（或用分布式锁）
+    enabled: ${TASK_ENABLED:true}
+    reminder-cron: "0 */30 * * * ?"     # 每30分钟催领扫描
+    expire-cron: "0 */10 * * * ?"       # 每10分钟授权过期清理
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
+
+logging:
+  level:
+    com.campus.express: INFO
+    com.campus.express.mapper: ${SQL_LOG_LEVEL:INFO}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId:-}] %-5level %logger{36} - %msg%n"

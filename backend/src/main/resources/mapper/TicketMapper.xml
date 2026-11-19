@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.express.mapper.TicketMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO service_ticket (ticket_no, user_id, category, title, content, contact, status, is_read)
+        VALUES (#{ticketNo}, #{userId}, #{category}, #{title}, #{content}, #{contact}, #{status}, #{isRead})
+    </insert>
+
+    <sql id="cols">
+        t.*, u.real_name AS user_name, u.phone AS user_phone, h.real_name AS handler_name
+    </sql>
+
+    <select id="selectById" resultType="ServiceTicket">
+        SELECT <include refid="cols"/>
+        FROM service_ticket t
+        JOIN sys_user u ON u.id = t.user_id
+        LEFT JOIN sys_user h ON h.id = t.handler_id
+        WHERE t.id = #{id}
+    </select>
+
+    <sql id="pageWhere">
+        <where>
+            <if test="userId != null">AND t.user_id = #{userId}</if>
+            <if test="status != null and status != ''">AND t.status = #{status}</if>
+            <if test="unread != null and unread">AND t.is_read = 0</if>
+            <if test="keyword != null and keyword != ''">
+                AND (t.ticket_no ILIKE '%' || #{keyword} || '%' OR t.title ILIKE '%' || #{keyword} || '%'
+                     OR u.real_name ILIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectPage" resultType="ServiceTicket">
+        SELECT <include refid="cols"/>
+        FROM service_ticket t
+        JOIN sys_user u ON u.id = t.user_id
+        LEFT JOIN sys_user h ON h.id = t.handler_id
+        <include refid="pageWhere"/>
+        ORDER BY t.is_read ASC, CASE t.status WHEN 'PENDING' THEN 0 WHEN 'PROCESSING' THEN 1 ELSE 2 END,
+                 t.created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countPage" resultType="long">
+        SELECT count(*) FROM service_ticket t JOIN sys_user u ON u.id = t.user_id
+        <include refid="pageWhere"/>
+    </select>
+
+    <update id="markRead">
+        UPDATE service_ticket SET is_read = 1, updated_at = now() WHERE id = #{id} AND is_read = 0
+    </update>
+
+    <update id="markProcessing">
+        UPDATE service_ticket SET status = 'PROCESSING', handler_id = #{handlerId}, is_read = 1, updated_at = now()
+        WHERE id = #{id} AND status = 'PENDING'
+    </update>
+
+    <update id="markDone">
+        UPDATE service_ticket SET status = 'DONE', handler_id = COALESCE(handler_id, #{handlerId}),
+                                  handled_at = now(), is_read = 1, updated_at = now()
+        WHERE id = #{id} AND status IN ('PENDING','PROCESSING')
+    </update>
+
+    <update id="closeByUser">
+        UPDATE service_ticket SET status = 'DONE', handled_at = now(), updated_at = now()
+        WHERE id = #{id} AND user_id = #{userId} AND status IN ('PENDING','PROCESSING')
+    </update>
+
+    <select id="countByStatus" resultType="long">
+        SELECT count(*) FROM service_ticket WHERE status = #{status}
+    </select>
+
+    <select id="countUnread" resultType="long">
+        SELECT count(*) FROM service_ticket WHERE is_read = 0 AND status != 'DONE'
+    </select>
+
+    <!-- 回复 -->
+    <insert id="insertReply" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ticket_reply (ticket_id, author_id, author_role, content)
+        VALUES (#{ticketId}, #{authorId}, #{authorRole}, #{content})
+    </insert>
+
+    <select id="selectReplies" resultType="TicketReply">
+        SELECT r.*, u.real_name AS author_name
+        FROM ticket_reply r JOIN sys_user u ON u.id = r.author_id
+        WHERE r.ticket_id = #{ticketId}
+        ORDER BY r.created_at ASC, r.id ASC
+    </select>
+</mapper>

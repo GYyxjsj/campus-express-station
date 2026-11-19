@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.express.mapper.WalletMapper">
+
+    <select id="selectByUser" resultType="WalletAccount">
+        SELECT * FROM wallet_account WHERE user_id = #{userId}
+    </select>
+
+    <insert id="insertAccount">
+        INSERT INTO wallet_account (user_id) VALUES (#{userId})
+        ON CONFLICT (user_id) DO NOTHING
+    </insert>
+
+    <select id="addBalance" resultType="java.math.BigDecimal">
+        UPDATE wallet_account
+        SET balance = balance + #{amount}::numeric,
+            total_recharge = total_recharge + CASE WHEN #{kind} = 'RECHARGE' THEN #{amount}::numeric ELSE 0 END,
+            total_earned = total_earned + CASE WHEN #{kind} IN ('EARN','REFUND') THEN #{amount}::numeric ELSE 0 END,
+            updated_at = now()
+        WHERE user_id = #{userId} AND status = 1
+        RETURNING balance
+    </select>
+
+    <select id="subBalance" resultType="java.math.BigDecimal">
+        UPDATE wallet_account
+        SET balance = balance - #{amount}::numeric,
+            total_spent = total_spent + #{amount}::numeric,
+            updated_at = now()
+        WHERE user_id = #{userId} AND status = 1 AND balance >= #{amount}::numeric
+        RETURNING balance
+    </select>
+
+    <update id="updateStatus">
+        UPDATE wallet_account SET status = #{status}, updated_at = now() WHERE user_id = #{userId}
+    </update>
+
+    <insert id="insertTx" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO wallet_transaction (user_id, type, amount, balance_after, channel, title,
+                                        ref_type, ref_id, remark, operator_id)
+        VALUES (#{userId}, #{type}, #{amount}, #{balanceAfter}, #{channel}, #{title},
+                #{refType}, #{refId}, #{remark}, #{operatorId})
+    </insert>
+
+    <sql id="txWhere">
+        <where>
+            <if test="userId != null">AND user_id = #{userId}</if>
+            <if test="type != null and type != ''">AND type = #{type}</if>
+            <if test="keyword != null and keyword != ''">
+                AND (title ILIKE '%' || #{keyword} || '%' OR remark ILIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectTxPage" resultType="WalletTransaction">
+        SELECT * FROM wallet_transaction
+        <include refid="txWhere"/>
+        ORDER BY ${sortCol} ${sortDir}, id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countTxPage" resultType="long">
+        SELECT count(*) FROM wallet_transaction
+        <include refid="txWhere"/>
+    </select>
+
+    <select id="selectAccounts" resultType="map">
+        SELECT w.user_id AS "userId", u.username AS "username", u.real_name AS "realName",
+               u.phone AS "phone", u.status AS "userStatus",
+               w.balance AS "balance", w.total_recharge AS "totalRecharge",
+               w.total_spent AS "totalSpent", w.total_earned AS "totalEarned",
+               w.status AS "status", w.updated_at AS "updatedAt",
+               (SELECT string_agg(r.role_code, ',') FROM sys_user_role ur
+                 JOIN sys_role r ON r.id = ur.role_id WHERE ur.user_id = u.id) AS "roles"
+        FROM wallet_account w JOIN sys_user u ON u.id = w.user_id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (u.username ILIKE '%' || #{keyword} || '%'
+                     OR u.real_name ILIKE '%' || #{keyword} || '%'
+                     OR u.phone ILIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+        ORDER BY ${sortCol} ${sortDir}, w.user_id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAccounts" resultType="long">
+        SELECT count(*) FROM wallet_account w JOIN sys_user u ON u.id = w.user_id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (u.username ILIKE '%' || #{keyword} || '%'
+                     OR u.real_name ILIKE '%' || #{keyword} || '%'
+                     OR u.phone ILIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </select>
+
+    <select id="platformSummary" resultType="map">
+        SELECT count(*) AS "accounts",
+               COALESCE(sum(balance), 0) AS "balance",
+               COALESCE(sum(total_recharge), 0) AS "recharge",
+               COALESCE(sum(total_spent), 0) AS "spent",
+               COALESCE(sum(total_earned), 0) AS "earned",
+               count(*) FILTER (WHERE status = 0) AS "frozen",
+               COALESCE((SELECT sum(amount) FROM wallet_transaction
+                          WHERE type = 'RECHARGE' AND created_at >= date_trunc('day', now())), 0) AS "todayRecharge",
+               COALESCE((SELECT sum(-amount) FROM wallet_transaction
+                          WHERE type = 'CONSUME' AND created_at >= date_trunc('day', now())), 0) AS "todayConsume",
+               (SELECT count(*) FROM recharge_order WHERE status = 'PENDING') AS "pendingOrders",
+               (SELECT COALESCE(sum(commission), 0) FROM proxy_order WHERE status = 'DONE') AS "commission"
+        FROM wallet_account
+    </select>
+
+    <select id="dailyFlow" resultType="map">
+        SELECT to_char(d.day, 'MM-DD') AS "day",
+               COALESCE(r.amt, 0) AS "recharge",
+               COALESCE(c.amt, 0) AS "consume",
+               COALESCE(e.amt, 0) AS "earn"
+        FROM generate_series(date_trunc('day', now()) - (#{days} - 1) * interval '1 day',
+                             date_trunc('day', now()), interval '1 day') AS d(day)
+        LEFT JOIN (SELECT date_trunc('day', created_at) AS day, sum(amount) AS amt
+                   FROM wallet_transaction WHERE type = 'RECHARGE' GROUP BY 1) r ON r.day = d.day
+        LEFT JOIN (SELECT date_trunc('day', created_at) AS day, sum(-amount) AS amt
+                   FROM wallet_transaction WHERE type = 'CONSUME' GROUP BY 1) c ON c.day = d.day
+        LEFT JOIN (SELECT date_trunc('day', created_at) AS day, sum(amount) AS amt
+                   FROM wallet_transaction WHERE type IN ('EARN','REFUND') GROUP BY 1) e ON e.day = d.day
+        ORDER BY d.day
+    </select>
+
+    <select id="typeDistribution" resultType="map">
+        SELECT type AS "name", count(*) AS "value", COALESCE(sum(abs(amount)), 0) AS "amount"
+        FROM wallet_transaction GROUP BY type ORDER BY "value" DESC
+    </select>
+</mapper>

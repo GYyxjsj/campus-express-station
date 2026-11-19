@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.express.mapper.OperationLogMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO operation_log (operator_id, operator_name, module, action, target_id, detail, ip, success)
+        VALUES (#{operatorId}, #{operatorName}, #{module}, #{action}, #{targetId}, #{detail}, #{ip}, #{success})
+    </insert>
+
+    <sql id="pageWhere">
+        <where>
+            <if test="module != null and module != ''">AND module = #{module}</if>
+            <if test="keyword != null and keyword != ''">
+                AND (operator_name ILIKE '%' || #{keyword} || '%'
+                     OR action ILIKE '%' || #{keyword} || '%'
+                     OR detail ILIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectPage" resultType="OperationLog">
+        SELECT * FROM operation_log
+        <include refid="pageWhere"/>
+        ORDER BY ${sortCol} ${sortDir}, id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countPage" resultType="long">
+        SELECT count(*) FROM operation_log
+        <include refid="pageWhere"/>
+    </select>
+</mapper>

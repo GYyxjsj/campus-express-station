@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.express.mapper.ProfileMapper">
+
+    <!-- 地址簿 -->
+    <insert id="insertAddress" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user_address (user_id, label, contact, phone, region, detail, longitude, latitude, is_default)
+        VALUES (#{userId}, #{label}, #{contact}, #{phone}, #{region}, #{detail}, #{longitude}, #{latitude}, #{isDefault})
+    </insert>
+
+    <select id="selectAddress" resultType="UserAddress">
+        SELECT * FROM user_address WHERE id = #{id}
+    </select>
+
+    <select id="selectAddresses" resultType="UserAddress">
+        SELECT * FROM user_address WHERE user_id = #{userId}
+        ORDER BY is_default DESC, updated_at DESC
+    </select>
+
+    <update id="updateAddress">
+        UPDATE user_address
+        SET label = #{label}, contact = #{contact}, phone = #{phone}, region = #{region},
+            detail = #{detail}, longitude = #{longitude}, latitude = #{latitude},
+            is_default = #{isDefault}, updated_at = now()
+        WHERE id = #{id} AND user_id = #{userId}
+    </update>
+
+    <delete id="deleteAddress">
+        DELETE FROM user_address WHERE id = #{id} AND user_id = #{userId}
+    </delete>
+
+    <update id="clearDefaultAddress">
+        UPDATE user_address SET is_default = 0 WHERE user_id = #{userId} AND is_default = 1
+    </update>
+
+    <select id="countAddresses" resultType="long">
+        SELECT count(*) FROM user_address WHERE user_id = #{userId}
+    </select>
+
+    <!-- 收货偏好 -->
+    <select id="selectPreference" resultType="ReceivePreference">
+        SELECT * FROM receive_preference WHERE user_id = #{userId}
+    </select>
+
+    <insert id="upsertPreference">
+        INSERT INTO receive_preference (user_id, time_slot, deliver_method, notify_channel,
+                                        quiet_hours, no_call, fragile_care, auto_proxy, note)
+        VALUES (#{userId}, #{timeSlot}, #{deliverMethod}, #{notifyChannel},
+                #{quietHours}, #{noCall}, #{fragileCare}, #{autoProxy}, #{note})
+        ON CONFLICT (user_id) DO UPDATE SET
+            time_slot = EXCLUDED.time_slot, deliver_method = EXCLUDED.deliver_method,
+            notify_channel = EXCLUDED.notify_channel, quiet_hours = EXCLUDED.quiet_hours,
+            no_call = EXCLUDED.no_call, fragile_care = EXCLUDED.fragile_care,
+            auto_proxy = EXCLUDED.auto_proxy, note = EXCLUDED.note, updated_at = now()
+    </insert>
+
+    <!-- 电话簿 -->
+    <insert id="insertContact" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO phone_contact (user_id, name, phone, relation, is_starred, remark)
+        VALUES (#{userId}, #{name}, #{phone}, #{relation}, #{isStarred}, #{remark})
+    </insert>
+
+    <select id="selectContacts" resultType="PhoneContact">
+        SELECT * FROM phone_contact WHERE user_id = #{userId}
+        ORDER BY is_starred DESC, name
+    </select>
+
+    <delete id="deleteContact">
+        DELETE FROM phone_contact WHERE id = #{id} AND user_id = #{userId}
+    </delete>
+
+    <select id="countContacts" resultType="long">
+        SELECT count(*) FROM phone_contact WHERE user_id = #{userId}
+    </select>
+</mapper>

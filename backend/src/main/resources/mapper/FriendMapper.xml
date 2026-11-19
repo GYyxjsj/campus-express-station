@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.express.mapper.FriendMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO friendship (user_id, friend_id, status, remark)
+        VALUES (#{userId}, #{friendId}, #{status}, #{remark})
+    </insert>
+
+    <select id="selectById" resultType="Friendship">
+        SELECT * FROM friendship WHERE id = #{id}
+    </select>
+
+    <select id="selectPair" resultType="Friendship">
+        SELECT * FROM friendship
+        WHERE (user_id = #{a} AND friend_id = #{b}) OR (user_id = #{b} AND friend_id = #{a})
+        LIMIT 1
+    </select>
+
+    <update id="accept">
+        UPDATE friendship SET status = 'ACCEPTED', updated_at = now()
+        WHERE id = #{id} AND status = 'PENDING'
+    </update>
+
+    <delete id="delete">
+        DELETE FROM friendship WHERE id = #{id}
+    </delete>
+
+    <select id="selectFriends" resultType="map">
+        SELECT f.id AS "id", f.remark AS "remark", f.created_at AS "createdAt",
+               u.id AS "friendUserId", u.username AS "username",
+               u.real_name AS "realName", u.phone AS "phone", u.status AS "status"
+        FROM friendship f
+        JOIN sys_user u ON u.id = CASE WHEN f.user_id = #{userId} THEN f.friend_id ELSE f.user_id END
+        WHERE (f.user_id = #{userId} OR f.friend_id = #{userId}) AND f.status = 'ACCEPTED'
+        ORDER BY f.updated_at DESC
+    </select>
+
+    <select id="selectIncoming" resultType="map">
+        SELECT f.id AS "id", f.remark AS "remark", f.created_at AS "createdAt",
+               u.id AS "fromUserId", u.username AS "username", u.real_name AS "realName"
+        FROM friendship f JOIN sys_user u ON u.id = f.user_id
+        WHERE f.friend_id = #{userId} AND f.status = 'PENDING'
+        ORDER BY f.created_at DESC
+    </select>
+
+    <select id="selectOutgoing" resultType="map">
+        SELECT f.id AS "id", f.created_at AS "createdAt",
+               u.id AS "toUserId", u.username AS "username", u.real_name AS "realName"
+        FROM friendship f JOIN sys_user u ON u.id = f.friend_id
+        WHERE f.user_id = #{userId} AND f.status = 'PENDING'
+        ORDER BY f.created_at DESC
+    </select>
+
+    <!-- 邀请返利 -->
+    <insert id="insertRebate" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO invite_rebate (inviter_id, invitee_id, recharge_order_id, recharge_amount, rate_percent, amount)
+        VALUES (#{inviterId}, #{inviteeId}, #{rechargeOrderId}, #{rechargeAmount}, #{ratePercent}, #{amount})
+        ON CONFLICT (recharge_order_id) DO NOTHING
+    </insert>
+
+    <select id="selectRebateByOrder" resultType="InviteRebate">
+        SELECT * FROM invite_rebate WHERE recharge_order_id = #{orderId}
+    </select>
+
+    <select id="selectRebatePage" resultType="map">
+        SELECT r.id AS "id", r.recharge_amount AS "rechargeAmount", r.rate_percent AS "ratePercent",
+               r.amount AS "amount", r.created_at AS "createdAt",
+               u.real_name AS "inviteeName", u.username AS "inviteeUsername",
+               o.order_no AS "orderNo"
+        FROM invite_rebate r
+        JOIN sys_user u ON u.id = r.invitee_id
+        JOIN recharge_order o ON o.id = r.recharge_order_id
+        WHERE r.inviter_id = #{inviterId}
+        ORDER BY r.created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countRebatePage" resultType="long">
+        SELECT count(*) FROM invite_rebate WHERE inviter_id = #{inviterId}
+    </select>
+
+    <select id="sumRebate" resultType="java.math.BigDecimal">
+        SELECT COALESCE(sum(amount), 0) FROM invite_rebate WHERE inviter_id = #{inviterId}
+    </select>
+</mapper>

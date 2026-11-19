@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.express.mapper.AdMapper">
+
+    <select id="selectActive" resultType="AdSlot">
+        SELECT * FROM ad_slot
+        WHERE status = 1
+          AND (start_at IS NULL OR start_at &lt;= now())
+          AND (end_at IS NULL OR end_at &gt;= now())
+        ORDER BY weight DESC, id
+    </select>
+
+    <select id="selectAll" resultType="AdSlot">
+        SELECT * FROM ad_slot ORDER BY slot_key, weight DESC, id
+    </select>
+
+    <select id="selectById" resultType="AdSlot">
+        SELECT * FROM ad_slot WHERE id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ad_slot (slot_key, title, content, link_url, theme, weight, status, start_at, end_at)
+        VALUES (#{slotKey}, #{title}, #{content}, #{linkUrl}, #{theme}, #{weight}, #{status}, #{startAt}, #{endAt})
+    </insert>
+
+    <update id="update">
+        UPDATE ad_slot
+        SET slot_key = #{slotKey}, title = #{title}, content = #{content}, link_url = #{linkUrl},
+            theme = #{theme}, weight = #{weight}, status = #{status},
+            start_at = #{startAt}, end_at = #{endAt}, updated_at = now()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM ad_slot WHERE id = #{id}
+    </delete>
+</mapper>

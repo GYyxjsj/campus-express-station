@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.express.mapper.RechargeOrderMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO recharge_order (order_no, user_id, amount, bonus, channel, status, expire_at)
+        VALUES (#{orderNo}, #{userId}, #{amount}, #{bonus}, #{channel}, #{status}, #{expireAt})
+    </insert>
+
+    <select id="selectById" resultType="RechargeOrder">
+        SELECT * FROM recharge_order WHERE id = #{id}
+    </select>
+
+    <sql id="pageWhere">
+        <where>
+            <if test="userId != null">AND user_id = #{userId}</if>
+            <if test="status != null and status != ''">AND status = #{status}</if>
+        </where>
+    </sql>
+
+    <select id="selectPage" resultType="RechargeOrder">
+        SELECT * FROM recharge_order
+        <include refid="pageWhere"/>
+        ORDER BY created_at DESC, id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countPage" resultType="long">
+        SELECT count(*) FROM recharge_order
+        <include refid="pageWhere"/>
+    </select>
+
+    <sql id="adminWhere">
+        <where>
+            <if test="status != null and status != ''">AND o.status = #{status}</if>
+            <if test="keyword != null and keyword != ''">
+                AND (o.order_no ILIKE '%' || #{keyword} || '%'
+                     OR u.username ILIKE '%' || #{keyword} || '%'
+                     OR u.real_name ILIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectAdminPage" resultType="map">
+        SELECT o.id AS "id", o.order_no AS "orderNo", o.user_id AS "userId",
+               u.username AS "username", u.real_name AS "realName",
+               o.amount AS "amount", o.bonus AS "bonus", o.channel AS "channel",
+               o.status AS "status", o.created_at AS "createdAt",
+               o.expire_at AS "expireAt", o.paid_at AS "paidAt"
+        FROM recharge_order o JOIN sys_user u ON u.id = o.user_id
+        <include refid="adminWhere"/>
+        ORDER BY ${sortCol} ${sortDir}, o.id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAdminPage" resultType="long">
+        SELECT count(*) FROM recharge_order o JOIN sys_user u ON u.id = o.user_id
+        <include refid="adminWhere"/>
+    </select>
+
+    <update id="markPaid">
+        UPDATE recharge_order SET status = 'PAID', paid_at = now()
+        WHERE id = #{id} AND status = 'PENDING' AND expire_at > now()
+    </update>
+
+    <update id="markCancelled">
+        UPDATE recharge_order SET status = 'CANCELLED'
+        WHERE id = #{id} AND user_id = #{userId} AND status = 'PENDING'
+    </update>
+
+    <select id="expireOutdated" resultType="RechargeOrder">
+        UPDATE recharge_order SET status = 'EXPIRED'
+        WHERE status = 'PENDING' AND expire_at &lt;= now()
+        RETURNING *
+    </select>
+</mapper>

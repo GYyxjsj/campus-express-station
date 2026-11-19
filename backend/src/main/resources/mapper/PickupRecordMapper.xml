@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.express.mapper.PickupRecordMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO pickup_record (parcel_id, pickup_type, owner_id, picker_id, auth_id, staff_id, station_id)
+        VALUES (#{parcelId}, #{pickupType}, #{ownerId}, #{pickerId}, #{authId}, #{staffId}, #{stationId})
+    </insert>
+
+    <select id="selectByParcel" resultType="PickupRecord">
+        SELECT * FROM pickup_record WHERE parcel_id = #{parcelId}
+    </select>
+
+    <select id="selectByOwner" resultType="PickupRecord">
+        SELECT * FROM pickup_record WHERE owner_id = #{ownerId}
+        ORDER BY picked_at DESC LIMIT #{limit}
+    </select>
+</mapper>

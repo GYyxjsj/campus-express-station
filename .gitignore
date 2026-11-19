@@ -1,0 +1,48 @@
+# ---------- 构建产物 ----------
+backend/target/
+frontend/dist/
+frontend/node_modules/
+*.war
+*.jar
+*.class
+
+# ---------- 依赖与缓存 ----------
+node_modules/
+.pnpm-store/
+.mvn/
+.cache/
+__pycache__/
+*.pyc
+
+# ---------- IDE / 系统 ----------
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------- 日志与临时文件 ----------
+logs/
+*.log
+*.tmp
+*.bak
+~$*
+
+# ---------- 环境与密钥（切勿提交） ----------
+.env
+.env.*
+setenv.bat
+*.pem
+*.key
+application-local.properties
+application-local.yml
+
+# ---------- 会话/校验临时目录 ----------
+.box-agent-scratch/
+.ref/
+.verify/
+
+# ---------- 历史过程截图（保留 qa/shots 实证图集） ----------
+qa/*.png
+qa/*.log

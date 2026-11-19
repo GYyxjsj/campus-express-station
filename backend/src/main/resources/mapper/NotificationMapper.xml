@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.express.mapper.NotificationMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO notification (user_id, parcel_id, type, channel, title, content, is_read, sent_at)
+        VALUES (#{userId}, #{parcelId}, #{type}, #{channel}, #{title}, #{content}, #{isRead}, now())
+    </insert>
+
+    <select id="selectById" resultType="Notification">
+        SELECT * FROM notification WHERE id = #{id}
+    </select>
+
+    <sql id="pageWhere">
+        WHERE user_id = #{userId} AND channel = 'IN_APP'
+        <if test="unreadOnly != null and unreadOnly">AND is_read = 0</if>
+    </sql>
+
+    <select id="selectPage" resultType="Notification">
+        SELECT * FROM notification
+        <include refid="pageWhere"/>
+        ORDER BY sent_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countPage" resultType="long">
+        SELECT count(*) FROM notification
+        <include refid="pageWhere"/>
+    </select>
+
+    <select id="countUnread" resultType="long">
+        SELECT count(*) FROM notification WHERE user_id = #{userId} AND is_read = 0 AND channel = 'IN_APP'
+    </select>
+
+    <update id="markRead">
+        UPDATE notification SET is_read = 1, read_at = now()
+        WHERE id = #{id} AND user_id = #{userId} AND is_read = 0
+    </update>
+
+    <update id="markAllRead">
+        UPDATE notification SET is_read = 1, read_at = now()
+        WHERE user_id = #{userId} AND is_read = 0
+    </update>
+
+    <select id="lastSentAt" resultType="java.time.OffsetDateTime">
+        SELECT max(sent_at) FROM notification
+        WHERE parcel_id = #{parcelId} AND type = #{type} AND channel = 'IN_APP'
+    </select>
+
+    <select id="countTodayRemind" resultType="long">
+        SELECT count(*) FROM notification
+        WHERE user_id = #{userId} AND type = 'REMIND' AND channel = 'IN_APP'
+          AND sent_at >= date_trunc('day', now())
+    </select>
+</mapper>
